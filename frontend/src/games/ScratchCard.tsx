@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 const ScratchCard = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [revealed, setRevealed] = useState(false);
     const [prize, setPrize] = useState<any>(null); // { label: '...', coins: 10, reward: ... }
@@ -19,10 +19,12 @@ const ScratchCard = () => {
         setupCard();
         determinePrize();
         // Start game session immediately on load
-        client.post('/games/start', { userId: user?.userId, gameName: 'scratch' })
+        if (user?.userId) {
+            client.post('/games/start', { userId: user.userId, gameName: 'scratch' })
               .then(res => setCurrentSessionId(res.data.sessionId))
               .catch(console.error);
-    }, []);
+        }
+    }, [user]);
 
     const determinePrize = async () => {
         // In real app, we might fetch this secure token
@@ -121,6 +123,7 @@ const ScratchCard = () => {
                     sessionId: currentSessionId,
                     score
                 });
+                refreshProfile();
             }
         } catch(e) {}
     };

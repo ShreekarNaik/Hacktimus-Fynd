@@ -1,7 +1,8 @@
 import { db } from './db';
 import { LeaderboardEntry } from '../../models/types';
+import { IBolticService } from '../interfaces';
 
-export class MockBolticService {
+export class MockBolticService implements IBolticService {
   
   // Simulate Boltic Tables.insert
   async insertLeaderboardEntry(entry: Omit<LeaderboardEntry, 'id'>): Promise<LeaderboardEntry> {
@@ -12,6 +13,13 @@ export class MockBolticService {
     db.leaderboards.push(newEntry);
     this.recalculateRanking(); // Mocking workflow effect? Or just basic sorting
     return newEntry;
+  }
+
+  // Generic insert for other tables
+  async insertRecord<T>(tableName: string, record: T): Promise<T> {
+      console.log(`[MockBoltic] Inserting into ${tableName}:`, record);
+      // In a real mock we might store this, but for now just logging
+      return record;
   }
 
   // Simulate Boltic Tables.list (with sorting for leaderboard)

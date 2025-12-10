@@ -1,6 +1,7 @@
 import { User, GameSession, LeaderboardEntry, Reward, CartAbandonment } from '../../models/types';
+import { IDatabase } from '../interfaces';
 
-class MockDB {
+class MockDB implements IDatabase {
   public users: Record<string, User> = {};
   public sessions: Record<string, GameSession> = {};
   public leaderboards: LeaderboardEntry[] = [];

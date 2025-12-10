@@ -25,7 +25,7 @@ const QUESTIONS = [
 
 const Quiz = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const [started, setStarted] = useState(false);
     const [currentQ, setCurrentQ] = useState(0);
     const [score, setScore] = useState(0); // Correct answers
@@ -35,13 +35,14 @@ const Quiz = () => {
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
     const handleStart = async () => {
+        if (!user?.userId) return;
         setStarted(true);
         setCurrentQ(0);
         setScore(0);
         setFinished(false);
         setLastResult(null);
         try {
-            const res = await client.post('/games/start', { userId: user?.userId, gameName: 'quiz' });
+            const res = await client.post('/games/start', { userId: user.userId, gameName: 'quiz' });
             setCurrentSessionId(res.data.sessionId);
         } catch(e) { console.error(e); }
     };
@@ -70,6 +71,8 @@ const Quiz = () => {
                     score: points
                 });
                 setLastResult(res.data);
+                // Refresh profile to update coins
+                refreshProfile();
             }
         } catch(e) {}
     };

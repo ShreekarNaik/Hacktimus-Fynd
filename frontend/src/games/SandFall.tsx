@@ -646,7 +646,7 @@ class SandFallEngine {
 // --- REACT COMPONENT ---
 
 const SandFall = () => {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nextCanvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<SandFallEngine | null>(null);
@@ -656,6 +656,12 @@ const SandFall = () => {
   const [highScore, setHighScore] = useState(0);
   const [difficulty, setDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [started, setStarted] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Keep a ref for the session ID to be accessible inside the engine callback closure if needed, 
+  // or just use the state if we update the callback on restart. 
+  // Simpler: Use a ref for the session ID so the callback always sees the current one.
+  const sessionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
      // Init High Score
@@ -671,11 +677,20 @@ const SandFall = () => {
           (s) => setScore(s),
           (final) => {
               setGameOver(true);
-              // Submit score API
-              client.post('/games/submit', { 
-                  sessionId: `sand-${Date.now()}`,
-                  score: final 
-              }).catch(() => {});
+              // Submit score API using the real session ID
+              if (sessionIdRef.current) {
+                  console.log('Submitting score for session:', sessionIdRef.current);
+                  client.post('/games/submit', { 
+                      sessionId: sessionIdRef.current,
+                      score: final 
+                  }).then(res => {
+                      console.log('Score submitted:', res.data);
+                      // Could show coins earned here
+                      refreshProfile();
+                  }).catch(console.error);
+              } else {
+                  console.error('No active session ID for submission');
+              }
           }
       );
       
@@ -683,9 +698,6 @@ const SandFall = () => {
       
       engineRef.current = engine;
       engine.draw(); // Initial draw
-
-      // Client init call
-      client.post('/games/start', { userId: user?.userId, gameName: 'sandfall' }).catch(console.error);
 
       return () => {
           engine.destroy();
@@ -699,8 +711,25 @@ const SandFall = () => {
       }
   }, [nextCanvasRef.current]);
 
-  const startGame = () => {
+  const startGame = async () => {
       if (!engineRef.current) return;
+      
+      // 1. Start Backend Session
+      try {
+          const res = await client.post('/games/start', { 
+              userId: user?.userId, 
+              gameName: 'sandfall' 
+          });
+          const newSessionId = res.data.sessionId;
+          setSessionId(newSessionId);
+          sessionIdRef.current = newSessionId;
+          console.log('Game Started, Session:', newSessionId);
+      } catch (e) {
+          console.error('Failed to start game session', e);
+          // Optional: Block game start? Or allow offline play?
+          // For now, let's allow play but log error
+      }
+
       setGameOver(false);
       setStarted(true);
       

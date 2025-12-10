@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../services/mock/db';
 import { boltic } from '../services/mock/boltic';
 import { fynd } from '../services/mock/fynd';
-import { GameSession } from '../models/types';
+import { GameSession, User } from '../models/types';
 
 // Config
 const WIN_LIMITS = {
@@ -12,12 +12,37 @@ const WIN_LIMITS = {
 
 const COIN_RATES: Record<string, number> = {
   'quiz': 0.1, // Score / 10
-  'pattern': 0.2,
-  'sandfall': 0.05 // New game
+  'pattern': 0.2, // Score / 5
+  'sandfall': 0.05 // Score / 20
 };
 
 export const startGame = async (req: Request, res: Response) => {
-  const { userId, gameName } = req.body;
+  const { userId, gameName, fyndUserId } = req.body;
+  
+  if (!userId) {
+     res.status(400).json({ error: 'userId is required' });
+     return;
+  }
+
+  // Ensure user exists (Mock Auto-Registration)
+  if (!db.users[userId]) {
+    console.log(`[GameController] Creating new mock user: ${userId}`);
+    const newUser: User = {
+      userId,
+      fyndUserId: fyndUserId || `fynd-${Date.now()}`,
+      coinsBalance: 0,
+      dailyLoginStreak: 1,
+      lastLoginDate: new Date().toISOString(),
+      totalGamesPlayed: 0,
+      totalWins: 0,
+      winsThisWeek: 0,
+      createdAt: Date.now()
+    };
+    db.users[userId] = newUser;
+    // In real app, we would sync this to Boltic Users table
+    await boltic.insertRecord('users', newUser);
+  }
+
   const sessionId = `sess-${Date.now()}`;
   
   // Create session
@@ -44,6 +69,11 @@ export const submitScore = async (req: Request, res: Response) => {
     return;
   }
 
+  if (session.completedAt > 0) {
+      res.status(400).json({ error: 'Session already completed' });
+      return;
+  }
+
   session.score = score;
   session.completedAt = Date.now();
   
@@ -57,6 +87,8 @@ export const submitScore = async (req: Request, res: Response) => {
   if (user) {
     user.coinsBalance += coinsEarned;
     user.totalGamesPlayed += 1;
+  } else {
+      console.error(`[GameController] User ${session.userId} not found during submit!`);
   }
 
   // Check Reward Eligibility (Mock Logic)
@@ -65,7 +97,7 @@ export const submitScore = async (req: Request, res: Response) => {
   const isWinner = Math.random() > 0.7; // 30% win rate for demo
   
   if (isWinner && user && user.winsThisWeek < WIN_LIMITS.weekly) {
-    // Generate Reward
+    // Generate Reward via Fynd Service
     const discount = Math.random() > 0.9 ? 50 : (Math.random() > 0.6 ? 25 : 10);
     const mockReward = await fynd.createCoupon(user.userId, discount);
     
@@ -76,7 +108,7 @@ export const submitScore = async (req: Request, res: Response) => {
       rewardTier: discount >= 40 ? 'GRAND' : 'STANDARD',
       discountPercentage: discount,
       couponCode: mockReward.code,
-      expiryDate: Date.now() + 48*3600*1000,
+      expiryDate: new Date(mockReward.validity.end).getTime(),
       redeemed: false,
       distributedAt: Date.now()
     };
@@ -84,11 +116,14 @@ export const submitScore = async (req: Request, res: Response) => {
     db.rewards[reward.rewardId] = reward;
     user.totalWins += 1;
     user.winsThisWeek += 1;
+
+    // Log reward to Boltic
+    await boltic.insertRecord('rewards', reward);
   }
 
-  // Update Leaderboard
+  // Update Leaderboard via Boltic Service
   await boltic.insertLeaderboardEntry({
-    userId: user.userId,
+    userId: session.userId,
     gameName: session.gameName,
     score,
     weekNumber: 1, // Mock week
@@ -99,10 +134,10 @@ export const submitScore = async (req: Request, res: Response) => {
     status: 'completed',
     coinsEarned,
     reward,
-    userStats: {
+    userStats: user ? {
       newBalance: user.coinsBalance,
       winsThisWeek: user.winsThisWeek
-    }
+    } : null
   });
 };
 

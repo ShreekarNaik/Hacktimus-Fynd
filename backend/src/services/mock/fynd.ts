@@ -1,6 +1,7 @@
 import { db } from './db';
+import { IFyndService } from '../interfaces';
 
-export class MockFyndService {
+export class MockFyndService implements IFyndService {
   
   // Simulate creating a coupon on Fynd Platform
   async createCoupon(userId: string, discountPercent: number, expiryHours: number = 48) {

@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { getProfile, getRewards } from '../controllers/userController';
+import { getUserProfile } from '../controllers/userController';
 
 const router = Router();
 
-router.get('/profile', getProfile);
-router.get('/rewards', getRewards);
+router.get('/:userId', getUserProfile);
 
 export default router;

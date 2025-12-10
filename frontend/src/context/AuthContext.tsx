@@ -5,6 +5,7 @@ import type { AuthState } from '../types';
 interface AuthContextType extends AuthState {
   login: (userId: string) => Promise<void>;
   logout: () => void;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,8 +19,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const fetchProfile = async () => {
+    const storedUserId = localStorage.getItem('userId');
+    if (!storedUserId) {
+        logout();
+        return;
+    }
+
     try {
-      const res = await client.get('/user/profile');
+      const res = await client.get(`/user/${storedUserId}`);
       setState(prev => ({ ...prev, user: res.data, isAuthenticated: true, isLoading: false }));
     } catch (e) {
       console.error('Failed to fetch profile', e);
@@ -36,19 +43,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [state.token]);
 
   const login = async (userId: string) => {
-    const res = await client.post('/auth/login', { userId });
-    const { token, user } = res.data;
-    localStorage.setItem('token', token);
-    setState({ user, token, isAuthenticated: true, isLoading: false });
+    try {
+      const res = await client.post('/auth/login', { userId });
+      const { token, user } = res.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('userId', user.userId);
+      setState({ user, token, isAuthenticated: true, isLoading: false });
+    } catch (e) {
+      console.error('Login failed', e);
+      throw e;
+    }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userId');
     setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, login, logout, refreshProfile: fetchProfile }}>
       {children}
     </AuthContext.Provider>
   );
