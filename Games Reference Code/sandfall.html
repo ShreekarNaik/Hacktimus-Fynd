@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Sand Fall</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;800;900&display=swap");
+
+      :root {
+        /* Casual Game Palette */
+        --bg-color: #f0f4f8;
+        --panel-bg: #fff9e6; /* Creamy panel */
+        --panel-border: #8c7ae6;
+        --btn-green-top: #2ecc71;
+        --btn-green-bottom: #27ae60;
+        --btn-shadow: #1e8449;
+
+        --btn-blue-top: #3498db;
+        --btn-blue-bottom: #2980b9;
+        --btn-blue-shadow: #1c5980;
+
+        --text-stroke: #2c3e50;
+      }
+
+      body {
+        background-color: #74b9ff;
+        background-image: radial-gradient(
+            circle at 10% 20%,
+            rgba(255, 255, 255, 0.2) 2px,
+            transparent 2.5px
+          ),
+          radial-gradient(
+            circle at 90% 80%,
+            rgba(255, 255, 255, 0.2) 2px,
+            transparent 2.5px
+          );
+        background-size: 40px 40px;
+        font-family: "Nunito", sans-serif;
+        overflow: hidden;
+        touch-action: none;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+      }
+
+      #game-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      /* Game Board Frame */
+      #game-board {
+        position: relative;
+        padding: 12px;
+        background: #2d3436;
+        border-radius: 20px;
+        box-shadow: 0 12px 0 rgba(0, 0, 0, 0.2);
+      }
+
+      canvas {
+        background-color: #1a1a1a;
+        border-radius: 12px;
+        image-rendering: pixelated;
+        display: block;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+      }
+
+      /* --- UI COMPONENTS --- */
+
+      .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(2px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 50;
+        transition: opacity 0.3s;
+      }
+
+      .hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* "Casual Game" Card Style */
+      .game-panel {
+        background: var(--panel-bg);
+        border: 6px solid #fff;
+        border-radius: 30px;
+        padding: 30px 20px;
+        width: 90%;
+        max-width: 340px;
+        text-align: center;
+        box-shadow: 0 10px 0 rgba(0, 0, 0, 0.2), 0 20px 40px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transform: scale(1);
+        animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      @keyframes bounceIn {
+        from {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      /* Juicy 3D Buttons */
+      .btn-3d {
+        width: 100%;
+        padding: 15px 0;
+        border-radius: 50px;
+        border: 3px solid #fff;
+        font-family: "Titan One", cursive;
+        font-size: 1.8rem;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        position: relative;
+        top: 0;
+        transition: top 0.1s, box-shadow 0.1s;
+        text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        margin-top: 15px;
+      }
+
+      .btn-green {
+        background: linear-gradient(
+          to bottom,
+          var(--btn-green-top),
+          var(--btn-green-bottom)
+        );
+        box-shadow: 0 6px 0 var(--btn-shadow), 0 10px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-blue {
+        background: linear-gradient(
+          to bottom,
+          var(--btn-blue-top),
+          var(--btn-blue-bottom)
+        );
+        box-shadow: 0 6px 0 var(--btn-blue-shadow),
+          0 10px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-3d:active {
+        top: 6px;
+        box-shadow: 0 0 0 var(--btn-shadow), inset 0 3px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Difficulty Slider - Progress Bar Style */
+      .config-group {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 15px;
+        padding: 15px;
+        width: 100%;
+        margin: 15px 0;
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        background: transparent;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 32px;
+        width: 32px;
+        border-radius: 50%;
+        background: #fdcb6e;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 0 #e1b12c;
+        margin-top: -10px;
+        cursor: pointer;
+      }
+
+      input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 12px;
+        background: #dfe6e9;
+        border-radius: 10px;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 2px solid #fff;
+      }
+
+      /* HUD Pills */
+      .hud-container {
+        position: absolute;
+        top: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 450px;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 25px;
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      .hud-pill {
+        background: #fff;
+        border: 3px solid #dfe6e9;
+        border-radius: 50px;
+        padding: 5px 20px 5px 45px; /* Space for icon */
+        position: relative;
+        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
+        min-width: 100px;
+        height: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .hud-icon {
+        position: absolute;
+        left: -5px;
+        top: -5px;
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, #ff9ff3, #f368e0);
+        border-radius: 50%;
+        border: 3px solid #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
+      }
+
+      .hud-icon.trophy {
+        background: linear-gradient(135deg, #feca57, #ff9f43);
+      }
+
+      .hud-label {
+        font-size: 0.7rem;
+        color: #b2bec3;
+        font-weight: 800;
+        text-transform: uppercase;
+        line-height: 1;
+      }
+      .hud-value {
+        font-size: 1.2rem;
+        color: #2d3436;
+        font-weight: 900;
+        line-height: 1.1;
+      }
+
+      /* Typography */
+      .title-text {
+        font-family: "Titan One", cursive;
+        font-size: 3.2rem;
+        color: #ff9f43;
+        -webkit-text-stroke: 2px #fff;
+        text-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+        line-height: 0.9;
+        margin-bottom: 5px;
+      }
+
+      .title-sub {
+        font-family: "Nunito", sans-serif;
+        font-weight: 900;
+        color: #576574;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+      }
+
+      .mascot-img {
+        font-size: 4rem;
+        filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.1));
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      /* Next Piece */
+      .next-box {
+        position: absolute;
+        top: 90px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background: #2d3436;
+        border: 3px solid #fff;
+        border-radius: 15px;
+        box-shadow: 0 5px 0 rgba(0, 0, 0, 0.2);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+      }
+
+      .pop-score {
+        position: absolute;
+        font-family: "Titan One", cursive;
+        font-size: 2.5rem;
+        color: #fff;
+        -webkit-text-stroke: 2px #000;
+        text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+        pointer-events: none;
+        z-index: 100;
+        animation: floatUp 0.8s ease-out forwards;
+      }
+
+      @keyframes floatUp {
+        0% {
+          transform: translateY(0) scale(0.5);
+          opacity: 0;
+        }
+        20% {
+          transform: translateY(-10px) scale(1.2);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-80px) scale(1);
+          opacity: 0;
+        }
+      }
+
+      /* Shake Class */
+      .shake {
+        animation: shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+      }
+      @keyframes shake {
+        10%,
+        90% {
+          transform: translate3d(-2px, 1px, 0);
+        }
+        20%,
+        80% {
+          transform: translate3d(3px, -1px, 0);
+        }
+        30%,
+        50%,
+        70% {
+          transform: translate3d(-5px, 2px, 0);
+        }
+        40%,
+        60% {
+          transform: translate3d(5px, -2px, 0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-wrapper">
+      <div id="game-board">
+        <canvas id="sandCanvas"></canvas>
+
+        <!-- HUD -->
+        <div class="hud-container" id="hud">
+          <div class="hud-pill">
+            <div class="hud-icon">★</div>
+            <div class="hud-label">SCORE</div>
+            <div class="hud-value" id="score">0</div>
+          </div>
+
+          <div class="hud-pill">
+            <div class="hud-icon trophy">♛</div>
+            <div class="hud-label">BEST</div>
+            <div class="hud-value" id="highScore">0</div>
+          </div>
+        </div>
+
+        <!-- Next Piece -->
+        <div class="next-box">
+          <canvas id="nextCanvas" width="40" height="40"></canvas>
+        </div>
+
+        <!-- Particles Container -->
+        <div
+          id="particles-container"
+          style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+          "
+        ></div>
+
+        <!-- MENU SCREEN -->
+        <div id="start-screen" class="overlay">
+          <div class="game-panel">
+            <div class="mascot-img" id="menu-mascot">😈</div>
+            <div class="title-text">SAND<br />FALL</div>
+            <div class="title-sub">Puzzle Adventure</div>
+
+            <div class="config-group">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 5px;
+                "
+              >
+                <span style="font-weight: 800; color: #636e72">DIFFICULTY</span>
+                <span
+                  id="difficulty-label"
+                  style="font-weight: 900; color: #e1b12c"
+                  >MEDIUM</span
+                >
+              </div>
+              <input
+                type="range"
+                id="difficulty-slider"
+                min="1"
+                max="3"
+                value="2"
+                step="1"
+              />
+            </div>
+
+            <button class="btn-3d btn-green" id="start-btn">PLAY NOW</button>
+          </div>
+        </div>
+
+        <!-- GAME OVER SCREEN -->
+        <div id="game-over-screen" class="overlay hidden">
+          <div class="game-panel">
+            <div class="mascot-img">💀</div>
+            <div class="title-text" style="font-size: 2.5rem; color: #ff7675">
+              GAME<br />OVER
+            </div>
+
+            <div
+              style="
+                background: #fff;
+                border-radius: 15px;
+                padding: 15px;
+                width: 100%;
+                margin: 20px 0;
+                border: 2px solid #dfe6e9;
+              "
+            >
+              <div style="font-size: 0.9rem; font-weight: 700; color: #b2bec3">
+                FINAL SCORE
+              </div>
+              <div
+                id="final-score"
+                style="
+                  font-family: 'Titan One';
+                  font-size: 3rem;
+                  color: #2d3436;
+                  line-height: 1;
+                "
+              >
+                0
+              </div>
+            </div>
+
+            <button class="btn-3d btn-blue" id="restart-btn">TRY AGAIN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /**
+       * SAND FALL GAME - CONFIGURATION & LOGIC
+       */
+
+      // --- CENTRAL GAME CONFIGURATION ---
+      const CONFIG = {
+        // Grid & Physics Resolution
+        grid: {
+          width: 200, // Higher res for smoother sand
+          height: 320,
+          blockSize: 12, // Macro-block size (pixels per block segment)
+        },
+
+        // Gameplay Settings
+        gameplay: {
+          dropIntervals: {
+            // Frames per drop step
+            easy: 35,
+            medium: 25,
+            hard: 8,
+          },
+          fastDropInterval: 1, // Speed when holding down
+          moveStep: 5, // Pixels to move left/right per input
+          inputSensitivity: 0.8, // Touch drag sensitivity
+        },
+
+        // Physics Tuning
+        physics: {
+          sandTickRate: 3, // Update sand every N frames (higher = slower/sludgier)
+        },
+
+        // Visual Effects
+        visuals: {
+          shakeIntensity: 5,
+          colors: [
+            "#FF3855", // Red
+            "#00D2FF", // Cyan
+            "#88FF00", // Lime
+            "#FFD600", // Yellow
+            "#BD00FF", // Purple
+          ],
+          pieceTemplates: [
+            [[1, 1, 1, 1]], // I
+            [
+              [1, 1],
+              [1, 1],
+            ], // O
+            [
+              [0, 1, 0],
+              [1, 1, 1],
+            ], // T
+            [
+              [1, 0, 0],
+              [1, 1, 1],
+            ], // L
+            [
+              [0, 0, 1],
+              [1, 1, 1],
+            ], // J
+            [
+              [0, 1, 1],
+              [1, 1, 0],
+            ], // S
+            [
+              [1, 1, 0],
+              [0, 1, 1],
+            ], // Z
+          ],
+        },
+      };
+
+      // --- STATE VARIABLES ---
+      let canvas, ctx, nextCanvas, nextCtx;
+      let grid = [];
+      let score = 0;
+      let highScore = localStorage.getItem("sandFallHighScore") || 0;
+      let gameState = "MENU";
+      let difficulty = 2;
+      let currentDropInterval = CONFIG.gameplay.dropIntervals.medium;
+      let frameCount = 0;
+      let sandPhysicsTick = 0;
+
+      // Pieces
+      let activePieceGrid = [];
+      let pieceX = 0;
+      let pieceY = 0;
+      let pieceColor = "";
+
+      // Next Piece
+      let nextPieceTemplate = null;
+      let nextPieceColor = null;
+
+      // Inputs
+      let touchStartX = 0,
+        touchStartY = 0;
+      let lastTouchX = 0;
+      let isTouchDragging = false;
+      let softDropActive = false;
+
+      // Particles
+      let particles = [];
+
+      // --- INITIALIZATION ---
+      window.onload = () => {
+        canvas = document.getElementById("sandCanvas");
+        ctx = canvas.getContext("2d", { alpha: false });
+        nextCanvas = document.getElementById("nextCanvas");
+        nextCtx = nextCanvas.getContext("2d");
+
+        initGrid();
+        setupUI();
+        setupInputs();
+        resize();
+        window.addEventListener("resize", resize);
+
+        randomizeNextPiece();
+        requestAnimationFrame(gameLoop);
+      };
+
+      function initGrid() {
+        grid = Array(CONFIG.grid.height)
+          .fill()
+          .map(() => Array(CONFIG.grid.width).fill(null));
+      }
+
+      function setupUI() {
+        const slider = document.getElementById("difficulty-slider");
+        const diffLabel = document.getElementById("difficulty-label");
+        const mascot = document.getElementById("menu-mascot");
+
+        const settings = [
+          { text: "EASY", color: "#88FF00", mascot: "😇" },
+          { text: "MEDIUM", color: "#FFD600", mascot: "😐" },
+          { text: "HARD", color: "#FF3855", mascot: "😈" },
+        ];
+
+        slider.addEventListener("input", (e) => {
+          difficulty = parseInt(e.target.value);
+          const s = settings[difficulty - 1];
+          diffLabel.innerText = s.text;
+          diffLabel.style.color = s.color;
+          mascot.innerText = s.mascot;
+        });
+
+        document
+          .getElementById("start-btn")
+          .addEventListener("click", startGame);
+        document
+          .getElementById("restart-btn")
+          .addEventListener("click", startGame);
+        document.getElementById("highScore").innerText = highScore;
+      }
+
+      function resize() {
+        const aspect = CONFIG.grid.width / CONFIG.grid.height;
+        let h = window.innerHeight;
+        let w = h * aspect;
+
+        // Desktop constraint
+        if (w > 480) {
+          w = 480;
+          h = w / aspect;
+        }
+
+        if (h > window.innerHeight) {
+          h = window.innerHeight;
+          w = h * aspect;
+        }
+
+        canvas.width = CONFIG.grid.width;
+        canvas.height = CONFIG.grid.height;
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+
+        ctx.imageSmoothingEnabled = false;
+      }
+
+      // --- GAME CONTROL ---
+      function startGame() {
+        initGrid();
+        score = 0;
+        updateScore(0);
+
+        // Set Difficulty Speed
+        if (difficulty === 1)
+          currentDropInterval = CONFIG.gameplay.dropIntervals.easy;
+        else if (difficulty === 2)
+          currentDropInterval = CONFIG.gameplay.dropIntervals.medium;
+        else currentDropInterval = CONFIG.gameplay.dropIntervals.hard;
+
+        document.getElementById("start-screen").classList.add("hidden");
+        document.getElementById("game-over-screen").classList.add("hidden");
+        document.getElementById("hud").style.opacity = "1";
+
+        gameState = "PLAYING";
+        particles = [];
+        spawnPiece();
+      }
+
+      function gameOver() {
+        gameState = "GAMEOVER";
+        document.getElementById("game-over-screen").classList.remove("hidden");
+        document.getElementById("final-score").innerText = score;
+
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem("sandFallHighScore", highScore);
+          document.getElementById("highScore").innerText = highScore;
+        }
+      }
+
+      function updateScore(points, x, y) {
+        if (points > 0) {
+          score += points;
+          if (x !== undefined && y !== undefined) {
+            createScorePopup(points, x, y);
+          }
+        }
+        document.getElementById("score").innerText = score;
+      }
+
+      function createScorePopup(val, gx, gy) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = rect.width / CONFIG.grid.width;
+        const scaleY = rect.height / CONFIG.grid.height;
+
+        const div = document.createElement("div");
+        div.className = "pop-score";
+        div.innerText = "+" + val;
+        div.style.left = rect.left + gx * scaleX + "px";
+        div.style.top = rect.top + gy * scaleY + "px";
+
+        document.getElementById("particles-container").appendChild(div);
+        setTimeout(() => div.remove(), 800);
+      }
+
+      // --- PIECE LOGIC ---
+      function randomizeNextPiece() {
+        const templates = CONFIG.visuals.pieceTemplates;
+        const colors = CONFIG.visuals.colors;
+
+        const typeIdx = Math.floor(Math.random() * templates.length);
+        const colorIdx = Math.floor(Math.random() * colors.length);
+
+        nextPieceTemplate = templates[typeIdx];
+        nextPieceColor = colors[colorIdx];
+        drawNextPiece();
+      }
+
+      function generatePieceGrid(template, color) {
+        const bs = CONFIG.grid.blockSize;
+        const rows = template.length;
+        const cols = template[0].length;
+        const pH = rows * bs;
+        const pW = cols * bs;
+
+        let newGrid = Array(pH)
+          .fill()
+          .map(() => Array(pW).fill(null));
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (template[r][c]) {
+              for (let y = 0; y < bs; y++) {
+                for (let x = 0; x < bs; x++) {
+                  newGrid[r * bs + y][c * bs + x] = color;
+                }
+              }
+            }
+          }
+        }
+        return newGrid;
+      }
+
+      function drawNextPiece() {
+        nextCtx.fillStyle = "#2d3436";
+        nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+
+        if (!nextPieceTemplate) return;
+
+        const pW = nextPieceTemplate[0].length;
+        const pH = nextPieceTemplate.length;
+        const cellSize = 8;
+        const offsetX = (nextCanvas.width - pW * cellSize) / 2;
+        const offsetY = (nextCanvas.height - pH * cellSize) / 2;
+
+        nextCtx.fillStyle = nextPieceColor;
+        for (let r = 0; r < pH; r++) {
+          for (let c = 0; c < pW; c++) {
+            if (nextPieceTemplate[r][c]) {
+              nextCtx.fillRect(
+                offsetX + c * cellSize,
+                offsetY + r * cellSize,
+                cellSize - 1,
+                cellSize - 1
+              );
+              // Internal border for preview
+              nextCtx.fillStyle = "rgba(255,255,255,0.3)";
+              nextCtx.fillRect(
+                offsetX + c * cellSize,
+                offsetY + r * cellSize,
+                1,
+                cellSize
+              );
+              nextCtx.fillRect(
+                offsetX + c * cellSize,
+                offsetY + r * cellSize,
+                cellSize,
+                1
+              );
+              nextCtx.fillStyle = nextPieceColor;
+            }
+          }
+        }
+      }
+
+      function spawnPiece() {
+        activePieceGrid = generatePieceGrid(nextPieceTemplate, nextPieceColor);
+        pieceColor = nextPieceColor;
+
+        pieceX =
+          Math.floor(CONFIG.grid.width / 2) -
+          Math.floor(activePieceGrid[0].length / 2);
+        pieceY = 0;
+
+        randomizeNextPiece();
+
+        if (checkCollision(pieceX, pieceY, activePieceGrid)) {
+          gameOver();
+        }
+      }
+
+      // --- INPUT HANDLING ---
+      function setupInputs() {
+        const step = CONFIG.gameplay.moveStep;
+
+        window.addEventListener("keydown", (e) => {
+          if (gameState !== "PLAYING") return;
+
+          if (e.key === "ArrowLeft") movePiece(-step, 0);
+          if (e.key === "ArrowRight") movePiece(step, 0);
+          if (e.key === "ArrowUp") rotatePiece();
+          if (e.key === " ") hardDrop();
+
+          if (e.key === "ArrowDown") {
+            softDropActive = true;
+            currentDropInterval = CONFIG.gameplay.fastDropInterval;
+          }
+        });
+
+        window.addEventListener("keyup", (e) => {
+          if (e.key === "ArrowDown") {
+            softDropActive = false;
+            // Restore speed based on difficulty
+            if (difficulty === 1)
+              currentDropInterval = CONFIG.gameplay.dropIntervals.easy;
+            else if (difficulty === 2)
+              currentDropInterval = CONFIG.gameplay.dropIntervals.medium;
+            else currentDropInterval = CONFIG.gameplay.dropIntervals.hard;
+          }
+        });
+
+        // Touch
+        const wrapper = document.getElementById("game-wrapper");
+
+        wrapper.addEventListener(
+          "touchstart",
+          (e) => {
+            if (gameState !== "PLAYING") return;
+            e.preventDefault();
+            const t = e.touches[0];
+            touchStartX = t.clientX;
+            touchStartY = t.clientY;
+            lastTouchX = t.clientX;
+            isTouchDragging = false;
+          },
+          { passive: false }
+        );
+
+        wrapper.addEventListener(
+          "touchmove",
+          (e) => {
+            if (gameState !== "PLAYING") return;
+            e.preventDefault();
+            const t = e.touches[0];
+            const dx = t.clientX - lastTouchX;
+            const dy = t.clientY - touchStartY;
+
+            const sensitivity =
+              (window.innerWidth / CONFIG.grid.width) *
+              CONFIG.gameplay.inputSensitivity;
+
+            if (Math.abs(dx) > sensitivity) {
+              const steps = Math.floor(Math.abs(dx) / sensitivity);
+              const dir = dx > 0 ? step : -step;
+              movePiece(dir, 0);
+              lastTouchX = t.clientX;
+              isTouchDragging = true;
+            }
+
+            if (dy > 50 && !softDropActive) {
+              softDropActive = true;
+              currentDropInterval = CONFIG.gameplay.fastDropInterval;
+            }
+          },
+          { passive: false }
+        );
+
+        wrapper.addEventListener("touchend", (e) => {
+          if (gameState !== "PLAYING") return;
+          const t = e.changedTouches[0];
+          const dx = t.clientX - touchStartX;
+          const dy = t.clientY - touchStartY;
+
+          softDropActive = false;
+          if (difficulty === 1)
+            currentDropInterval = CONFIG.gameplay.dropIntervals.easy;
+          else if (difficulty === 2)
+            currentDropInterval = CONFIG.gameplay.dropIntervals.medium;
+          else currentDropInterval = CONFIG.gameplay.dropIntervals.hard;
+
+          if (!isTouchDragging && Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+            rotatePiece();
+          }
+        });
+      }
+
+      // --- GAME LOOP & PHYSICS ---
+      function movePiece(dx, dy) {
+        if (!activePieceGrid.length) return;
+
+        if (!checkCollision(pieceX + dx, pieceY + dy, activePieceGrid)) {
+          pieceX += dx;
+          pieceY += dy;
+          if (dx !== 0) spawnTrail();
+          return true;
+        } else if (dy > 0) {
+          // Locking logic
+          if (dy > 1 && !checkCollision(pieceX, pieceY + 1, activePieceGrid)) {
+            pieceY += 1;
+            return true;
+          }
+          lockPiece();
+          return false;
+        }
+        return false;
+      }
+
+      function spawnTrail() {
+        if (!activePieceGrid.length) return;
+        const rows = activePieceGrid.length;
+        const cols = activePieceGrid[0].length;
+        for (let i = 0; i < 3; i++) {
+          const r = Math.floor(Math.random() * rows);
+          const c = Math.floor(Math.random() * cols);
+          if (activePieceGrid[r][c]) {
+            particles.push({
+              x: pieceX + c,
+              y: pieceY + r,
+              vx: 0,
+              vy: 0,
+              color: activePieceGrid[r][c],
+              life: 10,
+              isTrail: true,
+            });
+          }
+        }
+      }
+
+      function hardDrop() {
+        while (movePiece(0, 1));
+        shakeScreen(CONFIG.visuals.shakeIntensity);
+      }
+
+      function rotatePiece() {
+        if (!activePieceGrid.length) return;
+        const rows = activePieceGrid.length;
+        const cols = activePieceGrid[0].length;
+        let newGrid = Array(cols)
+          .fill()
+          .map(() => Array(rows).fill(null));
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            newGrid[c][rows - 1 - r] = activePieceGrid[r][c];
+          }
+        }
+
+        if (!checkCollision(pieceX, pieceY, newGrid)) {
+          activePieceGrid = newGrid;
+        } else {
+          // Wall Kick
+          const kick = 5;
+          if (!checkCollision(pieceX - kick, pieceY, newGrid)) {
+            pieceX -= kick;
+            activePieceGrid = newGrid;
+          } else if (!checkCollision(pieceX + kick, pieceY, newGrid)) {
+            pieceX += kick;
+            activePieceGrid = newGrid;
+          }
+        }
+      }
+
+      function checkCollision(x, y, pGrid) {
+        const rows = pGrid.length;
+        const cols = pGrid[0].length;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (pGrid[r][c]) {
+              const nx = x + c;
+              const ny = y + r;
+              if (nx < 0 || nx >= CONFIG.grid.width || ny >= CONFIG.grid.height)
+                return true;
+              if (ny >= 0 && grid[ny][nx]) return true;
+            }
+          }
+        }
+        return false;
+      }
+
+      function lockPiece() {
+        let minY = CONFIG.grid.height;
+        const rows = activePieceGrid.length;
+        const cols = activePieceGrid[0].length;
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (activePieceGrid[r][c]) {
+              const gx = pieceX + c;
+              const gy = pieceY + r;
+              if (
+                gy >= 0 &&
+                gy < CONFIG.grid.height &&
+                gx >= 0 &&
+                gx < CONFIG.grid.width
+              ) {
+                grid[gy][gx] = activePieceGrid[r][c];
+                if (gy < minY) minY = gy;
+              }
+            }
+          }
+        }
+
+        // Loose condition
+        if (minY < 20) {
+          gameOver();
+          return;
+        }
+
+        checkLines();
+        spawnPiece();
+      }
+
+      function gameLoop() {
+        if (gameState === "PLAYING") {
+          sandPhysicsTick++;
+          if (sandPhysicsTick % CONFIG.physics.sandTickRate === 0) {
+            updateSand();
+          }
+
+          updateParticles();
+
+          frameCount++;
+          if (frameCount >= currentDropInterval) {
+            movePiece(0, 1);
+            frameCount = 0;
+          }
+        }
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+
+      function updateSand() {
+        let changed = false;
+        const w = CONFIG.grid.width;
+        const h = CONFIG.grid.height;
+
+        for (let y = h - 2; y >= 0; y--) {
+          let xStart = Math.random() < 0.5 ? 0 : w - 1;
+          let xDir = xStart === 0 ? 1 : -1;
+
+          for (let i = 0; i < w; i++) {
+            let x = xStart + i * xDir;
+            if (grid[y][x]) {
+              const color = grid[y][x];
+
+              if (!grid[y + 1][x]) {
+                grid[y + 1][x] = color;
+                grid[y][x] = null;
+                changed = true;
+              } else {
+                // Slippery sand logic
+                let openLeft = x > 0 && !grid[y + 1][x - 1];
+                let openRight = x < w - 1 && !grid[y + 1][x + 1];
+
+                if (openLeft && openRight) {
+                  const dest = Math.random() < 0.5 ? x - 1 : x + 1;
+                  grid[y + 1][dest] = color;
+                  grid[y][x] = null;
+                  changed = true;
+                } else if (openLeft) {
+                  grid[y + 1][x - 1] = color;
+                  grid[y][x] = null;
+                  changed = true;
+                } else if (openRight) {
+                  grid[y + 1][x + 1] = color;
+                  grid[y][x] = null;
+                  changed = true;
+                }
+              }
+            }
+          }
+        }
+        if (frameCount % 10 === 0) checkLines();
+      }
+
+      function updateParticles() {
+        for (let i = particles.length - 1; i >= 0; i--) {
+          let p = particles[i];
+          if (p.isTrail) {
+            p.life -= 1;
+          } else {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.05;
+            p.life--;
+          }
+          if (p.life <= 0) particles.splice(i, 1);
+        }
+      }
+
+      function checkLines() {
+        // Simple flood fill to detect full left-to-right connections
+        let visited = new Uint8Array(CONFIG.grid.width * CONFIG.grid.height);
+        let groupsToClear = [];
+        let scoreMulti = 0;
+
+        for (let y = CONFIG.grid.height - 1; y >= 0; y--) {
+          for (let x = 0; x < CONFIG.grid.width; x++) {
+            const idx = y * CONFIG.grid.width + x;
+            if (grid[y][x] && !visited[idx]) {
+              let color = grid[y][x];
+              let q = [idx];
+              visited[idx] = 1;
+              let minX = x,
+                maxX = x;
+              let group = [];
+
+              let head = 0;
+              while (head < q.length) {
+                let curr = q[head++];
+                let cx = curr % CONFIG.grid.width;
+                let cy = Math.floor(curr / CONFIG.grid.width);
+
+                group.push({ x: cx, y: cy, c: color });
+                if (cx < minX) minX = cx;
+                if (cx > maxX) maxX = cx;
+
+                const dirs = [1, -1, CONFIG.grid.width, -CONFIG.grid.width];
+                if (cx === 0) dirs[1] = 0;
+                if (cx === CONFIG.grid.width - 1) dirs[0] = 0;
+
+                for (let d of dirs) {
+                  if (d === 0) continue;
+                  let nIdx = curr + d;
+                  if (nIdx >= 0 && nIdx < visited.length && !visited[nIdx]) {
+                    let ny = Math.floor(nIdx / CONFIG.grid.width);
+                    let nx = nIdx % CONFIG.grid.width;
+                    if (grid[ny][nx] === color) {
+                      visited[nIdx] = 1;
+                      q.push(nIdx);
+                    }
+                  }
+                }
+              }
+
+              if (minX === 0 && maxX === CONFIG.grid.width - 1) {
+                groupsToClear.push(group);
+                scoreMulti++;
+              }
+            }
+          }
+        }
+
+        if (groupsToClear.length > 0) {
+          let totalPixels = 0;
+          groupsToClear.forEach((group) => {
+            group.forEach((p) => {
+              grid[p.y][p.x] = null;
+              if (Math.random() > 0.6) {
+                particles.push({
+                  x: p.x,
+                  y: p.y,
+                  vx: (Math.random() - 0.5) * 2,
+                  vy: (Math.random() - 1) * 2,
+                  color: p.c,
+                  life: 30,
+                  maxLife: 30,
+                  isTrail: false,
+                });
+              }
+            });
+            totalPixels += group.length;
+          });
+
+          const pts = Math.floor(totalPixels / 2) * (scoreMulti * 2);
+          const center =
+            groupsToClear[0][Math.floor(groupsToClear[0].length / 2)];
+          updateScore(pts, center.x, center.y);
+        }
+      }
+
+      function shakeScreen(intensity) {
+        const board = document.getElementById("game-board");
+        board.classList.remove("shake");
+        void board.offsetWidth;
+        board.classList.add("shake");
+      }
+
+      function draw() {
+        // BG
+        ctx.fillStyle = "#1e1e1e";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Danger Line
+        ctx.strokeStyle = "#e74c3c";
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, 20);
+        ctx.lineTo(CONFIG.grid.width, 20);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Sand
+        const w = CONFIG.grid.width;
+        const h = CONFIG.grid.height;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            if (grid[y][x]) {
+              ctx.fillStyle = grid[y][x];
+              ctx.fillRect(x, y, 1, 1);
+            }
+          }
+        }
+
+        // Active Piece
+        if (activePieceGrid.length && gameState === "PLAYING") {
+          const rows = activePieceGrid.length;
+          const cols = activePieceGrid[0].length;
+
+          // Ghost
+          let ghostY = pieceY;
+          while (!checkCollision(pieceX, ghostY + 1, activePieceGrid)) ghostY++;
+
+          ctx.globalAlpha = 0.2;
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              if (activePieceGrid[r][c]) {
+                ctx.fillStyle = activePieceGrid[r][c];
+                ctx.fillRect(pieceX + c, ghostY + r, 1, 1);
+              }
+            }
+          }
+          ctx.globalAlpha = 1.0;
+
+          // Piece
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              if (activePieceGrid[r][c]) {
+                ctx.fillStyle = activePieceGrid[r][c];
+                ctx.fillRect(pieceX + c, pieceY + r, 1, 1);
+
+                // "Macro-block" internal borders
+                if (
+                  r % CONFIG.grid.blockSize === 0 ||
+                  c % CONFIG.grid.blockSize === 0
+                ) {
+                  ctx.fillStyle = "rgba(255,255,255,0.15)";
+                  ctx.fillRect(pieceX + c, pieceY + r, 1, 1);
+                }
+              }
+            }
+          }
+        }
+
+        // Particles
+        particles.forEach((p) => {
+          if (p.isTrail) {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life / 20;
+            ctx.fillRect(p.x, p.y, 1, 1);
+            ctx.globalAlpha = 1.0;
+          } else {
+            // Flash white on spawn
+            if (p.life > p.maxLife - 5) ctx.fillStyle = "#fff";
+            else ctx.fillStyle = p.color;
+
+            ctx.globalAlpha = p.life / p.maxLife;
+            ctx.fillRect(p.x, p.y, 1, 1);
+            ctx.globalAlpha = 1.0;
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
