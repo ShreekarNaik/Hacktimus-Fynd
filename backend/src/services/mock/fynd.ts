@@ -5,7 +5,13 @@ export class MockFyndService implements IFyndService {
   
   // Simulate creating a coupon on Fynd Platform
   async createCoupon(userId: string, discountPercent: number, expiryHours: number = 48) {
-    const code = `WIN${discountPercent}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    // Make a complex, unguessable code using basic random for mock (can use crypto in real app)
+    // Format: WIN<Discount>_<RANDOM_HASH>
+    // e.g. WIN50_8A29F1C...
+    const hash = Math.random().toString(36).substring(2, 10).toUpperCase() + 
+                 Math.random().toString(36).substring(2, 10).toUpperCase();
+                 
+    const code = `WIN${discountPercent}_${hash}`;
     console.log(`[MockFynd] Creating Coupon: Code=${code}, User=${userId}, Discount=${discountPercent}%`);
     return {
       code,

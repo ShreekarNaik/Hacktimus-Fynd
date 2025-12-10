@@ -7,15 +7,20 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [userId, setUserId] = useState('test-user');
+  const [password, setPassword] = useState('pass123'); // Default password for ease
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleLogin = async () => {
     setLoading(true);
+    setError('');
     try {
-      await login(userId);
+      await login(userId, password);
+      // Auth check is now immediate in ProtectedRoute but navigation helps
       navigate('/');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(typeof err === 'string' ? err : 'Login Failed');
     } finally {
       setLoading(false);
     }
@@ -39,15 +44,28 @@ const Login: React.FC = () => {
           Play . Win . Shop
         </p>
 
-        <div className="mb-6">
+        <div className="space-y-4 mb-6">
            <input 
              type="text" 
              value={userId}
              onChange={(e) => setUserId(e.target.value)}
-             className="w-full p-4 rounded-xl border-2 border-gray-300 font-nunito font-bold text-gray-700 focus:outline-none focus:border-orange-400 bg-white"
+             className="w-full p-4 rounded-xl border-2 border-gray-300 font-nunito font-bold text-gray-700 focus:outline-none focus:border-orange-400 bg-white shadow-inner"
              placeholder="Username"
            />
+           <input 
+             type="password" 
+             value={password}
+             onChange={(e) => setPassword(e.target.value)}
+             className="w-full p-4 rounded-xl border-2 border-gray-300 font-nunito font-bold text-gray-700 focus:outline-none focus:border-orange-400 bg-white shadow-inner"
+             placeholder="Password"
+           />
         </div>
+        
+        {error && (
+            <div className="bg-red-100 text-red-500 font-bold p-3 rounded-xl mb-4 text-sm animate-pulse">
+                ⚠️ {error}
+            </div>
+        )}
 
         <Button3D 
           label={loading ? "Loading..." : "START PLAYING"} 

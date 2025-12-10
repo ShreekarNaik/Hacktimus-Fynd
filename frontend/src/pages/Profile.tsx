@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Button3D from '../components/Button3D';
+import Modal from '../components/Modal';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,10 +10,19 @@ const Profile = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
     const [rewards, setRewards] = useState<any[]>([]);
+    const [pendingRewards, setPendingRewards] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    // Claim State
+    const [claiming, setClaiming] = useState(false);
+    const [claimReward, setClaimReward] = useState<any>(null);
+    const [showClaimModal, setShowClaimModal] = useState(false);
 
     useEffect(() => {
-        if (user) fetchRewards();
+        if (user) {
+            fetchRewards();
+            fetchPendingRewards();
+        }
     }, [user]);
 
     const fetchRewards = async () => {
@@ -25,6 +35,36 @@ const Profile = () => {
             console.error(e);
         } finally {
             setLoading(false);
+        }
+    };
+    
+    const fetchPendingRewards = async () => {
+        try {
+            const res = await client.get(`/games/pending-rewards?userId=${user?.userId}`);
+            setPendingRewards(res.data);
+        } catch(e) {
+            console.error(e);
+        }
+    };
+    
+    const handleClaim = async (gameName: string) => {
+        setClaiming(true);
+        try {
+            const res = await client.post('/games/claim-leaderboard', {
+                userId: user?.userId,
+                gameName
+            });
+            setClaimReward(res.data.reward);
+            setShowClaimModal(true);
+            
+            // Refresh logic
+            fetchPendingRewards();
+            fetchRewards();
+        } catch(e) {
+            console.error(e);
+            alert("Failed to claim reward.");
+        } finally {
+            setClaiming(false);
         }
     };
 
@@ -52,6 +92,29 @@ const Profile = () => {
                     </div>
                 </div>
 
+                {/* PENDING REWARDS */}
+                {pendingRewards.length > 0 && (
+                    <div className="mb-8">
+                         <h2 className="font-titan text-xl text-yellow-500 mb-4 pl-2 animate-pulse">🏆 UNCLAIMED CHAMPIONSHIP</h2>
+                         <div className="space-y-4">
+                             {pendingRewards.map((p, i) => (
+                                 <div key={i} className="bg-gradient-to-r from-yellow-400 to-orange-400 p-4 rounded-2xl shadow-lg border-4 border-yellow-200 text-white relative overflow-hidden">
+                                     <div className="absolute top-0 right-0 p-4 bg-white/20 rounded-bl-full text-4xl">👑</div>
+                                     <h3 className="font-black text-lg uppercase mb-1">{p.gameName} CHAMPION</h3>
+                                     <p className="text-xs font-bold w-2/3 mb-4">You are currently Rank #1! Claim your reward now (removes you from leaderboard).</p>
+                                     <button 
+                                        onClick={() => handleClaim(p.gameName)}
+                                        disabled={claiming}
+                                        className="bg-white text-orange-500 font-black text-sm px-6 py-2 rounded-lg shadow-md hover:bg-gray-100 transition-colors"
+                                     >
+                                        {claiming ? 'CLAIMING...' : 'CLAIM REWARD'}
+                                     </button>
+                                 </div>
+                             ))}
+                         </div>
+                    </div>
+                )}
+
                 <h2 className="font-titan text-2xl text-purple-600 mb-4 pl-2">MY REWARDS</h2>
                 
                 {loading ? (
@@ -67,7 +130,7 @@ const Profile = () => {
                                 <div className="absolute right-0 top-0 opacity-10 text-6xl transform translate-x-4 -translate-y-4">🎁</div>
                                 <div>
                                     <div className="font-titan text-xl text-gray-800">{reward.discountPercentage}% OFF</div>
-                                    <div className="text-xs font-bold text-gray-400">Code: <span className="bg-purple-100 px-2 py-1 rounded text-purple-600 select-all">{reward.couponCode}</span></div>
+                                    <div className="text-xs font-bold text-gray-400 break-all pr-2">Code: <span className="bg-purple-100 px-2 py-1 rounded text-purple-600 select-all font-mono">{reward.couponCode}</span></div>
                                     <div className="text-[10px] text-gray-300 mt-1">Exp: {new Date(reward.expiryDate).toLocaleDateString()}</div>
                                 </div>
                                 <button className="bg-purple-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow hover:bg-purple-600 transition-colors">
@@ -82,6 +145,25 @@ const Profile = () => {
                     <Button3D label="BACK HOME" onClick={() => navigate('/')} variant="blue" />
                     <button onClick={logout} className="text-red-400 font-bold text-sm hover:text-red-500">Log Out</button>
                 </div>
+                
+                <Modal isOpen={showClaimModal}>
+                     <div className="p-6 text-center w-full">
+                         {claimReward && (
+                             <div className="animate-bounce-in">
+                                 <h3 className="font-titan text-3xl text-yellow-500 mb-2 drop-shadow-sm">CHAMPION!</h3>
+                                 <p className="font-bold text-gray-500 text-sm mb-6">You've claimed your reward for being #1!</p>
+                                 
+                                 <div className="bg-gradient-to-r from-yellow-100 to-orange-100 p-4 rounded-xl mb-6 text-yellow-800 font-bold border-2 border-yellow-300 border-dashed relative overflow-hidden">
+                                      <div className="text-xs uppercase mb-1 opacity-70">Coupon Code</div>
+                                      <div className="text-xl font-black break-all font-mono">{claimReward.couponCode}</div>
+                                      <div className="text-sm mt-1">{claimReward.discountPercentage}% OFF</div>
+                                 </div>
+                                 
+                                 <Button3D label="AWESOME" onClick={() => setShowClaimModal(false)} variant="green" />
+                             </div>
+                         )}
+                     </div>
+                </Modal>
             </div>
         </Layout>
     );

@@ -10,5 +10,11 @@ export const getUserProfile = async (req: Request, res: Response) => {
     return;
   }
 
-  res.json(user);
+  // Fetch User Rewards
+  const userRewards = Object.values(db.rewards).filter(r => r.userId === userId);
+  
+  res.json({
+      ...user,
+      rewards: userRewards
+  });
 };

@@ -141,6 +141,69 @@ export const submitScore = async (req: Request, res: Response) => {
   });
 };
 
+export const claimLeaderboardReward = async (req: Request, res: Response) => {
+    const { userId, gameName } = req.body;
+    
+    // 1. Verify User is #1
+    const leaderboard = await boltic.getLeaderboard(gameName, 1);
+    const topEntry = leaderboard[0];
+    
+    if (!topEntry || topEntry.userId !== userId) {
+        res.status(400).json({ error: 'You are not eligible for this reward. Rank #1 required.' });
+        return;
+    }
+    
+    // 2. Generate Reward
+    const discount = 75; // Grand prize
+    const mockReward = await fynd.createCoupon(userId, discount, 168); // 1 week expiry
+    
+    const reward = {
+      rewardId: `rew-grand-${Date.now()}`,
+      userId: userId,
+      rewardType: 'leaderboard_champion',
+      rewardTier: 'LEGENDARY',
+      discountPercentage: discount,
+      couponCode: mockReward.code,
+      expiryDate: new Date(mockReward.validity.end).getTime(),
+      redeemed: false,
+      distributedAt: Date.now(),
+      metadata: { game: gameName, score: topEntry.score }
+    };
+    
+    // 3. Save Reward
+    db.rewards[reward.rewardId] = reward;
+    await boltic.insertRecord('rewards', reward);
+    
+    // 4. Remove from Leaderboard (Consume the win)
+    await boltic.removeLeaderboardEntry(userId, gameName);
+    
+    res.json({ status: 'claimed', reward });
+};
+
+export const getPendingRewards = async (req: Request, res: Response) => {
+    const { userId } = req.query;
+    if (!userId) {
+        res.status(400).json({ error: 'userId required' });
+        return;
+    }
+    
+    const games = ['sandfall', 'spin', 'scratch', 'quiz'];
+    const pending = [];
+    
+    for (const g of games) {
+        const lb = await boltic.getLeaderboard(g, 1);
+        if (lb.length > 0 && lb[0].userId === String(userId)) {
+            pending.push({
+                gameName: g,
+                reason: 'Rank #1 Champion',
+                claimable: true
+            });
+        }
+    }
+    
+    res.json(pending);
+};
+
 export const getLeaderboard = async (req: Request, res: Response) => {
   const { gameName } = req.params;
   const leaderboard = await boltic.getLeaderboard(gameName, 1); // Mock Week 1

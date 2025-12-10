@@ -4,6 +4,33 @@ import { IBolticService } from '../interfaces';
 
 export class MockBolticService implements IBolticService {
   
+  constructor() {
+      this.seedMockLeaderboard();
+  }
+
+  private seedMockLeaderboard() {
+      // Seed some fake data
+      if (db.leaderboards.length === 0) {
+          console.log("[MockBoltic] Seeding leaderboard data...");
+          // Test User at Top for 'sandfall'
+          db.leaderboards.push({ id: 'top-1', userId: 'test-user', gameName: 'sandfall', score: 9999, weekNumber: 1, timestamp: Date.now() });
+          
+          // Other randoms
+          for(let i=0; i<8; i++) {
+              db.leaderboards.push({
+                  id: `mock-${i}`,
+                  userId: `player_${Math.floor(Math.random()*1000)}`,
+                  gameName: 'sandfall',
+                  score: Math.floor(Math.random() * 5000) + 1000,
+                  weekNumber: 1,
+                  timestamp: Date.now() - Math.random() * 10000000
+              });
+          }
+           // Test User at Top for 'spin'
+          db.leaderboards.push({ id: 'top-spin-1', userId: 'test-user', gameName: 'spin', score: 5000, weekNumber: 1, timestamp: Date.now() });
+      }
+  }
+
   // Simulate Boltic Tables.insert
   async insertLeaderboardEntry(entry: Omit<LeaderboardEntry, 'id'>): Promise<LeaderboardEntry> {
     const newEntry: LeaderboardEntry = {
@@ -13,6 +40,13 @@ export class MockBolticService implements IBolticService {
     db.leaderboards.push(newEntry);
     this.recalculateRanking(); // Mocking workflow effect? Or just basic sorting
     return newEntry;
+  }
+  
+  async removeLeaderboardEntry(userId: string, gameName: string): Promise<boolean> {
+      const initialLen = db.leaderboards.length;
+      db.leaderboards = db.leaderboards.filter(e => !(e.userId === userId && e.gameName === gameName));
+      console.log(`[MockBoltic] Removed leaderboard entry for ${userId} in ${gameName}. Was: ${initialLen}, Now: ${db.leaderboards.length}`);
+      return db.leaderboards.length < initialLen;
   }
 
   // Generic insert for other tables

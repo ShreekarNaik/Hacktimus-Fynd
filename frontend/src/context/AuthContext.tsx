@@ -3,7 +3,7 @@ import client from '../api/client';
 import type { AuthState } from '../types';
 
 interface AuthContextType extends AuthState {
-  login: (userId: string) => Promise<void>;
+  login: (userId: string, password?: string) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
 }
@@ -42,16 +42,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [state.token]);
 
-  const login = async (userId: string) => {
+  /* 
+   * Updated login to accept password. 
+   * Note: We are using "pass123" as the mock password in backend.
+   */
+  const login = async (userId: string, password?: string) => {
     try {
-      const res = await client.post('/auth/login', { userId });
+      const res = await client.post('/auth/login', { userId, password });
       const { token, user } = res.data;
       localStorage.setItem('token', token);
       localStorage.setItem('userId', user.userId);
       setState({ user, token, isAuthenticated: true, isLoading: false });
-    } catch (e) {
+    } catch (e: any) {
       console.error('Login failed', e);
-      throw e;
+      // Re-throw so UI can handle error
+      throw e.response?.data?.error || "Login Failed";
     }
   };
 

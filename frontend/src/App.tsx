@@ -31,12 +31,12 @@ function App() {
               </GameLayout>
             </ProtectedRoute>
           } />
-          <Route path="/game/sandfall" element={<SandFallGame />} />
-          <Route path="/game/spin" element={<SpinWheel />} />
-          <Route path="/game/scratch" element={<ScratchCard />} />
-          <Route path="/game/quiz" element={<Quiz />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/game/sandfall" element={<ProtectedRoute><SandFallGame /></ProtectedRoute>} />
+          <Route path="/game/spin" element={<ProtectedRoute><SpinWheel /></ProtectedRoute>} />
+          <Route path="/game/scratch" element={<ProtectedRoute><ScratchCard /></ProtectedRoute>} />
+          <Route path="/game/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         </Routes>
       </Router>
     </AuthProvider>
