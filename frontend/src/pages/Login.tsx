@@ -4,26 +4,71 @@ import { useNavigate } from 'react-router-dom';
 import Button3D from '../components/Button3D';
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { loginWithOtp, register, sendOtp } = useAuth();
   const navigate = useNavigate();
-  const [userId, setUserId] = useState('test-user');
-  const [password, setPassword] = useState('pass123'); // Default password for ease
+  
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [step, setStep] = useState<'ID' | 'OTP'>('ID');
+  
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [username, setUsername] = useState('');
+  const [otp, setOtp] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async () => {
+  const handleSendOtp = async () => {
+    if (!phoneNumber || phoneNumber.length < 10) {
+        setError("Please enter a valid Phone Number");
+        return;
+    }
+    if (isRegistering && !username) {
+        setError("Please enter a Username");
+        return;
+    }
+
     setLoading(true);
     setError('');
     try {
-      await login(userId, password);
-      // Auth check is now immediate in ProtectedRoute but navigation helps
+        await sendOtp(phoneNumber);
+        setStep('OTP');
+    } catch (err: any) {
+        console.error(err);
+        setError("Failed to send OTP");
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleAuth = async () => {
+    if (!otp) {
+        setError("Please enter OTP");
+        return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      if (isRegistering) {
+          await register(phoneNumber, username, otp);
+      } else {
+          await loginWithOtp(phoneNumber, otp);
+      }
       navigate('/');
     } catch (err: any) {
       console.error(err);
-      setError(typeof err === 'string' ? err : 'Login Failed');
+      setError(typeof err === 'string' ? err : 'Authentication Failed');
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleMode = () => {
+      setIsRegistering(!isRegistering);
+      setStep('ID');
+      setOtp('');
+      setError('');
+      // Keep phone number if user switches mode, but clear username
+      setUsername(''); 
   };
 
   return (
@@ -41,24 +86,38 @@ const Login: React.FC = () => {
           FYND<br/>GAMES
         </h1>
         <p className="font-nunito font-bold text-gray-500 uppercase tracking-widest mb-8">
-          Play . Win . Shop
+          {isRegistering ? "Join the Fun" : "Play . Win . Shop"}
         </p>
 
         <div className="space-y-4 mb-6">
+           {isRegistering && step === 'ID' && (
+               <input 
+                 type="text" 
+                 value={username}
+                 onChange={(e) => setUsername(e.target.value)}
+                 className="w-full p-4 rounded-xl border-2 border-gray-300 font-nunito font-bold text-gray-700 focus:outline-none focus:border-orange-400 bg-white shadow-inner animate-fade-in"
+                 placeholder="Choose a Username"
+               />
+           )}
+
            <input 
              type="text" 
-             value={userId}
-             onChange={(e) => setUserId(e.target.value)}
+             value={phoneNumber}
+             onChange={(e) => setPhoneNumber(e.target.value)}
              className="w-full p-4 rounded-xl border-2 border-gray-300 font-nunito font-bold text-gray-700 focus:outline-none focus:border-orange-400 bg-white shadow-inner"
-             placeholder="Username"
+             placeholder="Phone Number"
+             disabled={step === 'OTP'}
            />
-           <input 
-             type="password" 
-             value={password}
-             onChange={(e) => setPassword(e.target.value)}
-             className="w-full p-4 rounded-xl border-2 border-gray-300 font-nunito font-bold text-gray-700 focus:outline-none focus:border-orange-400 bg-white shadow-inner"
-             placeholder="Password"
-           />
+           
+           {step === 'OTP' && (
+               <input 
+                 type="text" 
+                 value={otp}
+                 onChange={(e) => setOtp(e.target.value)}
+                 className="w-full p-4 rounded-xl border-2 border-gray-300 font-nunito font-bold text-gray-700 focus:outline-none focus:border-orange-400 bg-white shadow-inner animate-fade-in"
+                 placeholder="Enter OTP (Any)"
+               />
+           )}
         </div>
         
         {error && (
@@ -67,12 +126,30 @@ const Login: React.FC = () => {
             </div>
         )}
 
-        <Button3D 
-          label={loading ? "Loading..." : "START PLAYING"} 
-          onClick={handleLogin}
-          variant="green"
-          disabled={loading}
-        />
+        {step === 'ID' ? (
+            <Button3D 
+              label={loading ? "SENDING..." : "SEND OTP"} 
+              onClick={handleSendOtp}
+              variant="blue"
+              disabled={loading}
+            />
+        ) : (
+            <Button3D 
+              label={loading ? "VERIFYING..." : (isRegistering ? "SIGN UP" : "START PLAYING")} 
+              onClick={handleAuth}
+              variant="green"
+              disabled={loading}
+            />
+        )}
+        
+        <div className="mt-6">
+            <button 
+                onClick={toggleMode}
+                className="text-gray-500 font-bold underline hover:text-orange-500 transition-colors"
+            >
+                {isRegistering ? "Already have an account? Login" : "New User? Sign Up"}
+            </button>
+        </div>
         
         <div className="mt-4 text-xs font-nunito font-bold text-gray-400">
           POWERED BY BOLTIC & FYND
