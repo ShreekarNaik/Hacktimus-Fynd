@@ -16,7 +16,7 @@ export interface AuthState {
 }
 
 // Admin Types
-export interface Company {
+export interface Brand {
   id: string;
   name: string;
   createdAt: string;
@@ -24,7 +24,7 @@ export interface Company {
 
 export interface CouponTemplate {
   id: string;
-  companyId: string;
+  brandId: string;
   couponPrefix: string;
   validityDays: number;
   rarityPercentage: number; // 0-100, lower = more rare

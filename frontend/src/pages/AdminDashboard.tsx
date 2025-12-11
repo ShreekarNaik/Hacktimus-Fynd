@@ -2,27 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
-import type { Company, CouponTemplate } from '../types';
+import type { Brand, CouponTemplate } from '../types';
 
 const AdminDashboard: React.FC = () => {
   const { logout } = useAdmin();
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<'companies' | 'coupons'>('companies');
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [activeTab, setActiveTab] = useState<'brands' | 'coupons'>('brands');
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [coupons, setCoupons] = useState<CouponTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   
-  // Company form
-  const [showCompanyModal, setShowCompanyModal] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
-  const [companyName, setCompanyName] = useState('');
+  // Brand form
+  const [showBrandModal, setShowBrandModal] = useState(false);
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const [brandName, setBrandName] = useState('');
   
   // Coupon form
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<CouponTemplate | null>(null);
   const [couponForm, setCouponForm] = useState({
-    companyId: '',
+    brandId: '',
     couponPrefix: '',
     validityDays: 30,
     rarityPercentage: 50,
@@ -32,16 +32,16 @@ const AdminDashboard: React.FC = () => {
   });
 
   useEffect(() => {
-    fetchCompanies();
+    fetchBrands();
     fetchCoupons();
   }, []);
 
-  const fetchCompanies = async () => {
+  const fetchBrands = async () => {
     try {
-      const res = await client.get('/admin/companies');
-      setCompanies(res.data);
+      const res = await client.get('/admin/brands');
+      setBrands(res.data);
     } catch (e) {
-      console.error('Failed to fetch companies', e);
+      console.error('Failed to fetch brands', e);
     }
   };
 
@@ -59,44 +59,44 @@ const AdminDashboard: React.FC = () => {
     navigate('/admin/login');
   };
 
-  // Company CRUD
-  const openCompanyModal = (company?: Company) => {
-    if (company) {
-      setEditingCompany(company);
-      setCompanyName(company.name);
+  // Brand CRUD
+  const openBrandModal = (brand?: Brand) => {
+    if (brand) {
+      setEditingBrand(brand);
+      setBrandName(brand.name);
     } else {
-      setEditingCompany(null);
-      setCompanyName('');
+      setEditingBrand(null);
+      setBrandName('');
     }
-    setShowCompanyModal(true);
+    setShowBrandModal(true);
   };
 
-  const saveCompany = async () => {
-    if (!companyName.trim()) return;
+  const saveBrand = async () => {
+    if (!brandName.trim()) return;
     setLoading(true);
     try {
-      if (editingCompany) {
-        await client.put(`/admin/companies/${editingCompany.id}`, { name: companyName });
+      if (editingBrand) {
+        await client.put(`/admin/brands/${editingBrand.id}`, { name: brandName });
       } else {
-        await client.post('/admin/companies', { name: companyName });
+        await client.post('/admin/brands', { name: brandName });
       }
-      await fetchCompanies();
-      setShowCompanyModal(false);
-      setCompanyName('');
+      await fetchBrands();
+      setShowBrandModal(false);
+      setBrandName('');
     } catch (e) {
-      console.error('Failed to save company', e);
+      console.error('Failed to save brand', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteCompany = async (id: string) => {
-    if (!confirm('Delete this company?')) return;
+  const deleteBrand = async (id: string) => {
+    if (!confirm('Delete this brand?')) return;
     try {
-      await client.delete(`/admin/companies/${id}`);
-      await fetchCompanies();
+      await client.delete(`/admin/brands/${id}`);
+      await fetchBrands();
     } catch (e) {
-      console.error('Failed to delete company', e);
+      console.error('Failed to delete brand', e);
     }
   };
 
@@ -105,7 +105,7 @@ const AdminDashboard: React.FC = () => {
     if (coupon) {
       setEditingCoupon(coupon);
       setCouponForm({
-        companyId: coupon.companyId,
+        brandId: coupon.brandId,
         couponPrefix: coupon.couponPrefix,
         validityDays: coupon.validityDays,
         rarityPercentage: coupon.rarityPercentage,
@@ -116,7 +116,7 @@ const AdminDashboard: React.FC = () => {
     } else {
       setEditingCoupon(null);
       setCouponForm({
-        companyId: companies[0]?.id || '',
+        brandId: brands[0]?.id || '',
         couponPrefix: '',
         validityDays: 30,
         rarityPercentage: 50,
@@ -129,7 +129,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const saveCoupon = async () => {
-    if (!couponForm.companyId || !couponForm.couponPrefix) return;
+    if (!couponForm.brandId || !couponForm.couponPrefix) return;
     setLoading(true);
     try {
       if (editingCoupon) {
@@ -170,8 +170,8 @@ const AdminDashboard: React.FC = () => {
     return 'bg-gray-100 border-gray-300';
   };
 
-  const getCompanyName = (companyId: string) => {
-    return companies.find(c => c.id === companyId)?.name || 'Unknown';
+  const getBrandName = (brandId: string) => {
+    return brands.find(c => c.id === brandId)?.name || 'Unknown';
   };
 
   return (
@@ -198,8 +198,8 @@ const AdminDashboard: React.FC = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white border-4 border-blue-300 rounded-2xl p-4 text-center">
-            <div className="text-3xl font-titan text-blue-500">{companies.length}</div>
-            <div className="font-nunito font-bold text-gray-600 text-sm">Companies</div>
+            <div className="text-3xl font-titan text-blue-500">{brands.length}</div>
+            <div className="font-nunito font-bold text-gray-600 text-sm">Brands</div>
           </div>
           <div className="bg-white border-4 border-purple-300 rounded-2xl p-4 text-center">
             <div className="text-3xl font-titan text-purple-500">{coupons.length}</div>
@@ -214,14 +214,14 @@ const AdminDashboard: React.FC = () => {
         {/* Tabs */}
         <div className="flex gap-2 mb-4">
           <button
-            onClick={() => setActiveTab('companies')}
+            onClick={() => setActiveTab('brands')}
             className={`px-6 py-3 font-bold rounded-t-xl transition-all ${
-              activeTab === 'companies' 
+              activeTab === 'brands' 
                 ? 'bg-white border-4 border-b-0 border-white text-orange-500' 
                 : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
             }`}
           >
-            🏢 Companies
+            🏢 Brands
           </button>
           <button
             onClick={() => setActiveTab('coupons')}
@@ -237,34 +237,34 @@ const AdminDashboard: React.FC = () => {
 
         {/* Content */}
         <div className="bg-white border-4 border-white rounded-b-[30px] rounded-tr-[30px] p-6 shadow-xl">
-          {activeTab === 'companies' && (
+        {activeTab === 'brands' && (
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="font-titan text-2xl text-gray-700">Company Management</h2>
+                <h2 className="font-titan text-2xl text-gray-700">Brand Management</h2>
                 <button
-                  onClick={() => openCompanyModal()}
+                  onClick={() => openBrandModal()}
                   className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full"
                 >
-                  + Add Company
+                  + Add Brand
                 </button>
               </div>
               
               <div className="space-y-2">
-                {companies.map(company => (
-                  <div key={company.id} className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border-2 border-gray-200">
+                {brands.map(brand => (
+                  <div key={brand.id} className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border-2 border-gray-200">
                     <div>
-                      <div className="font-bold text-gray-800">{company.name}</div>
-                      <div className="text-xs text-gray-500">ID: {company.id}</div>
+                      <div className="font-bold text-gray-800">{brand.name}</div>
+                      <div className="text-xs text-gray-500">ID: {brand.id}</div>
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => openCompanyModal(company)}
+                        onClick={() => openBrandModal(brand)}
                         className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-4 rounded-full text-sm"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => deleteCompany(company.id)}
+                        onClick={() => deleteBrand(brand.id)}
                         className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-4 rounded-full text-sm"
                       >
                         Delete
@@ -283,7 +283,7 @@ const AdminDashboard: React.FC = () => {
                 <button
                   onClick={() => openCouponModal()}
                   className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full"
-                  disabled={companies.length === 0}
+                  disabled={brands.length === 0}
                 >
                   + Add Coupon
                 </button>
@@ -297,7 +297,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-bold text-gray-800">{coupon.couponPrefix}</span>
                           <span className="text-sm bg-white px-2 py-1 rounded-full border border-gray-300">
-                            {getCompanyName(coupon.companyId)}
+                            {getBrandName(coupon.brandId)}
                           </span>
                           <span className={`text-xs font-bold ${getRarityColor(coupon.rarityPercentage)}`}>
                             {coupon.rarityPercentage}% Rarity
@@ -333,29 +333,30 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Company Modal */}
-      {showCompanyModal && (
+      {/* Brand Modal */}
+      {showBrandModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full border-4 border-orange-400">
             <h3 className="font-titan text-2xl text-orange-500 mb-4">
-              {editingCompany ? 'Edit Company' : 'Add Company'}
+              {editingBrand ? 'Edit Brand' : 'Add Brand'}
             </h3>
             <input
               type="text"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="Company Name"
+              value={brandName}
+              onChange={(e) => setBrandName(e.target.value)}
+              placeholder="Brand Name"
               className="w-full p-3 border-2 border-gray-300 rounded-xl mb-4 font-bold focus:border-orange-400 focus:outline-none"
             />
             <div className="flex gap-2">
               <button
-                onClick={saveCompany}
-                disabled={loading || !companyName.trim()}
+                onClick={saveBrand}
+                disabled={loading || !brandName.trim()}
                 className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-full"
               >
                 {loading ? 'Saving...' : 'Save'}
               </button>
               <button
-                onClick={() => setShowCompanyModal(false)}
+                onClick={() => setShowBrandModal(false)}
                 className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full"
               >
                 Cancel
@@ -375,14 +376,14 @@ const AdminDashboard: React.FC = () => {
             
             <div className="space-y-3">
               <div>
-                <label className="block font-bold text-sm mb-1">Company</label>
+                <label className="block font-bold text-sm mb-1">Brand</label>
                 <select
-                  value={couponForm.companyId}
-                  onChange={(e) => setCouponForm({ ...couponForm, companyId: e.target.value })}
+                  value={couponForm.brandId}
+                  onChange={(e) => setCouponForm({ ...couponForm, brandId: e.target.value })}
                   className="w-full p-3 border-2 border-gray-300 rounded-xl font-bold focus:border-orange-400 focus:outline-none"
                 >
-                  <option value="">Select Company</option>
-                  {companies.map(c => (
+                  <option value="">Select Brand</option>
+                  {brands.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
@@ -406,8 +407,9 @@ const AdminDashboard: React.FC = () => {
                     type="number"
                     min="1"
                     max="100"
+                    step="0.01" // Support decimals
                     value={couponForm.discountPercentage}
-                    onChange={(e) => setCouponForm({ ...couponForm, discountPercentage: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => setCouponForm({ ...couponForm, discountPercentage: parseFloat(e.target.value) || 0 })}
                     className="w-full p-3 border-2 border-gray-300 rounded-xl font-bold focus:border-orange-400 focus:outline-none"
                   />
                 </div>
@@ -470,7 +472,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex gap-2 mt-4">
               <button
                 onClick={saveCoupon}
-                disabled={loading || !couponForm.companyId || !couponForm.couponPrefix}
+                disabled={loading || !couponForm.brandId || !couponForm.couponPrefix}
                 className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-full"
               >
                 {loading ? 'Saving...' : 'Save'}

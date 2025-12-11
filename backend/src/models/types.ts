@@ -1,6 +1,5 @@
 export interface User {
-  userId: string;
-  fyndUserId: string;
+  mobileNumber: string; // Primary Key
   coinsBalance: number;
   dailyLoginStreak: number;
   lastLoginDate: string;
@@ -8,14 +7,14 @@ export interface User {
   totalWins: number;
   winsThisWeek: number;
   createdAt: number;
-  phoneNumber?: string;
   preferredStores?: string[];
   displayName?: string;
+  // fyndUserId and userId removed
 }
 
 export interface GameSession {
   sessionId: string;
-  userId: string;
+  mobileNumber: string;
   gameName: string;
   score: number;
   coinsEarned: number;
@@ -27,7 +26,7 @@ export interface GameSession {
 
 export interface LeaderboardEntry {
   id: string;
-  userId: string;
+  mobileNumber: string;
   gameName: string;
   score: number;
   weekNumber: number;
@@ -36,7 +35,7 @@ export interface LeaderboardEntry {
 
 export interface Reward {
   rewardId: string;
-  userId: string;
+  mobileNumber: string;
   rewardType: string;
   rewardTier: string; // GRAND, PREMIUM, STANDARD, BASIC
   discountPercentage: number;
@@ -48,11 +47,29 @@ export interface Reward {
 
 export interface CartAbandonment {
   cartId: string;
-  userId: string;
+  mobileNumber: string;
   items: any[];
   cartValue: number;
   createdAt: number;
   notificationSent: boolean;
   gameLink?: string;
   converted: boolean;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  createdAt: number;
+}
+
+export interface CouponTemplate {
+  id: string;
+  brandId: string;
+  couponPrefix: string;
+  discountPercentage: number;
+  validityDays: number;
+  rarityPercentage: number;
+  redeemUrl: string;
+  terms: string;
+  createdAt: number;
 }

@@ -19,55 +19,81 @@ BOLTIC_REGION=asia-south1
 ### Boltic Tables Schema
 
 #### 1. users
-- `userId` (Text, Primary Key) - Unique user identifier
-- `fyndUserId` (Text) - Fynd platform user ID
-- `coinsBalance` (Number/Integer) - User's coin balance
-- `dailyLoginStreak` (Number/Integer) - Consecutive days logged in
-- `lastLoginDate` (Text) - Last login timestamp
-- `totalGamesPlayed` (Number/Integer) - Total games played
-- `totalWins` (Number/Integer) - Total wins
-- `winsThisWeek` (Number/Integer) - Wins in current week
-- `createdAt` (BigInt/Number) - Account creation timestamp
+- `mobile_number` (Text, Primary Key) - User's Mobile Number (Unique ID)
+- `coins_balance` (Number/Integer) - User's coin balance
+- `daily_login_streak` (Number/Integer) - Consecutive days logged in
+- `last_login_date` (Text) - Last login timestamp
+- `total_games_played` (Number/Integer) - Total games played
+- `total_wins` (Number/Integer) - Total wins
+- `wins_this_week` (Number/Integer) - Wins in current week
+- `created_at` (BigInt/Number) - Account creation timestamp
 
 #### 2. game_sessions
-- `sessionId` (Text, Primary Key) - Unique session identifier
-- `userId` (Text) - User who played
-- `gameName` (Text) - Name of the game (e.g., "scratch-card", "quiz", etc.)
+- `session_id` (Text, Primary Key) - Unique session identifier
+- `mobile_number` (Text) - User who played
+- `game_name` (Text) - Name of the game (e.g., "scratch-card", "quiz", etc.)
 - `score` (Number/Integer) - Score achieved
-- `coinsEarned` (Number/Integer) - Coins earned from this session
-- `rewardTier` (Text, Optional) - Reward tier achieved (GRAND, PREMIUM, STANDARD, BASIC)
-- `completedAt` (BigInt/Number) - Session completion timestamp
-- `isCartRecovery` (Boolean) - Whether this was from cart recovery campaign
-- `cartId` (Text, Optional) - Associated cart ID if cart recovery
+- `coins_earned` (Number/Integer) - Coins earned from this session
+- `reward_tier` (Text, Optional) - Reward tier achieved (GRAND, PREMIUM, STANDARD, BASIC)
+- `completed_at` (BigInt/Number) - Session completion timestamp
+- `is_cart_recovery` (Boolean) - Whether this was from cart recovery campaign
+- `cart_id` (Text, Optional) - Associated cart ID if cart recovery
 
 #### 3. leaderboard
 - `id` (Text, Primary Key) - Unique leaderboard entry identifier
-- `userId` (Text) - User ID
-- `gameName` (Text) - Game name
+- `mobile_number` (Text) - User ID
+- `game_name` (Text) - Game name
 - `score` (Number/Integer) - High score
-- `weekNumber` (Number/Integer) - Week number (for weekly leaderboards)
+- `week_number` (Number/Integer) - Week number (for weekly leaderboards)
 - `timestamp` (BigInt/Number) - When this score was achieved
 
 #### 4. rewards
-- `rewardId` (Text, Primary Key) - Unique reward identifier
-- `userId` (Text) - User who earned the reward
-- `rewardType` (Text) - Type of reward (e.g., "coupon", "discount")
-- `rewardTier` (Text) - Tier (GRAND, PREMIUM, STANDARD, BASIC)
-- `discountPercentage` (Number/Integer) - Discount amount
-- `couponCode` (Text) - Generated coupon code
-- `expiryDate` (BigInt/Number) - Expiry timestamp
+- `reward_id` (Text, Primary Key) - Unique reward identifier
+- `mobile_number` (Text) - User who earned the reward
+- `reward_type` (Text) - Type of reward (e.g., "coupon", "discount")
+- `reward_tier` (Text) - Tier (GRAND, PREMIUM, STANDARD, BASIC)
+- `discount_percentage` (Number/Integer) - Discount amount
+- `coupon_code` (Text) - Generated coupon code
+- `expiry_date` (BigInt/Number) - Expiry timestamp
 - `redeemed` (Boolean) - Whether reward has been redeemed
-- `distributedAt` (BigInt/Number) - When reward was distributed
+- `distributed_at` (BigInt/Number) - When reward was distributed
 
 #### 5. cart_abandonments
-- `cartId` (Text, Primary Key) - Unique cart identifier
-- `userId` (Text) - User who abandoned cart
+- `cart_id` (Text, Primary Key) - Unique cart identifier
+- `mobile_number` (Text) - User who abandoned cart
 - `items` (JSON) - Cart items array
-- `cartValue` (Number/Decimal) - Total cart value
-- `createdAt` (BigInt/Number) - When cart was created/abandoned
-- `notificationSent` (Boolean) - Whether recovery notification was sent
-- `gameLink` (Text, Optional) - Link to recovery game
+- `cart_value` (Number/Decimal) - Total cart value
+- `created_at` (BigInt/Number) - When cart was created/abandoned
+- `notification_sent` (Boolean) - Whether recovery notification was sent
+- `game_link` (Text, Optional) - Link to recovery game
 - `converted` (Boolean) - Whether user completed purchase
+
+#### 6. User Contact Mapping
+> **Note**: This table maps user contact info to their User ID.
+- `id` (Text, Primary Key) - Unique identifier
+- `user_id` (Text) - The Boltic User ID
+- `mobile_number` (Text) - User's mobile number
+- `email` (Text, Optional) - User's email
+- `application_id` (Text, Optional) - Fynd Application ID
+- `company_id` (Text, Optional) - Fynd Company ID
+- `created_at` (BigInt/Number) - Timestamp
+- `updated_at` (BigInt/Number) - Timestamp
+
+#### 7. brands
+- `id` (Text, Primary Key) - Unique Brand ID
+- `name` (Text) - Brand Name
+- `created_at` (BigInt/Number) - Timestamp
+
+#### 8. coupon_templates
+- `id` (Text, Primary Key) - Unique Template ID
+- `brand_id` (Text) - Reference to Brand
+- `coupon_prefix` (Text) - Prefix for code generation (e.g. "DIWALI")
+- `discount_percentage` (Number/Decimal) - Value of coupon (Float supported)
+- `validity_days` (Number) - Days valid after distribution
+- `rarity_percentage` (Number) - Rarity weight (0-100)
+- `redeem_url` (Text) - URL to redeem
+- `terms` (Text) - T&C Text
+- `created_at` (BigInt/Number) - Timestamp
 
 ### Creating Tables Manually in Boltic Console
 
@@ -81,31 +107,46 @@ Since table creation requires the Boltic Console UI, follow these steps:
 
    **Table 1 - users:**
    ```
-   Create a table named users with columns: userId (text, primary key), fyndUserId (text), coinsBalance (number), dailyLoginStreak (number), lastLoginDate (text), totalGamesPlayed (number), totalWins (number), winsThisWeek (number), createdAt (bigint).
+   Create a table named users with columns: mobile_number (text, primary key), coins_balance (number), daily_login_streak (number), last_login_date (text), total_games_played (number), total_wins (number), wins_this_week (number), created_at (bigint).
    ```
 
    **Table 2 - game_sessions:**
    ```
-   Create a table named game_sessions with columns: sessionId (text, primary key), userId (text), gameName (text), score (number), coinsEarned (number), rewardTier (text, nullable), completedAt (bigint), isCartRecovery (boolean), cartId (text, nullable).
+   Create a table named game_sessions with columns: session_id (text, primary key), mobile_number (text), game_name (text), score (number), coins_earned (number), reward_tier (text, nullable), completed_at (bigint), is_cart_recovery (boolean), cart_id (text, nullable).
    ```
 
    **Table 3 - leaderboard:**
    ```
-   Create a table named leaderboard with columns: id (text, primary key), userId (text), gameName (text), score (number), weekNumber (number), timestamp (bigint).
+   Create a table named leaderboard with columns: id (text, primary key), mobile_number (text), game_name (text), score (number), week_number (number), timestamp (bigint).
    ```
 
    **Table 4 - rewards:**
    ```
-   Create a table named rewards with columns: rewardId (text, primary key), userId (text), rewardType (text), rewardTier (text), discountPercentage (number), couponCode (text), expiryDate (bigint), redeemed (boolean), distributedAt (bigint).
+   Create a table named rewards with columns: reward_id (text, primary key), mobile_number (text), reward_type (text), reward_tier (text), discount_percentage (number), coupon_code (text), expiry_date (bigint), redeemed (boolean), distributed_at (bigint).
    ```
 
    **Table 5 - cart_abandonments:**
    ```
-   Create a table named cart_abandonments with columns: cartId (text, primary key), userId (text), items (json), cartValue (number), createdAt (bigint), notificationSent (boolean), gameLink (text, nullable), converted (boolean).
+   Create a table named cart_abandonments with columns: cart_id (text, primary key), mobile_number (text), items (json), cart_value (number), created_at (bigint), notification_sent (boolean), game_link (text, nullable), converted (boolean).
    ```
 
+    **Table 6 - User Contact Mapping:**
+    ```
+    Create a table named "User Contact Mapping" with columns: id (text, primary key), user_id (text), mobile_number (text), email (text), application_id (text), company_id (text), created_at (bigint), updated_at (bigint).
+    ```
+
+    **Table 7 - brands:**
+    ```
+    Create a table named brands with columns: id (text, primary key), name (text), created_at (bigint).
+    ```
+
+    **Table 8 - coupon_templates:**
+    ```
+    Create a table named coupon_templates with columns: id (text, primary key), brand_id (text), coupon_prefix (text), discount_percentage (number), validity_days (number), rarity_percentage (number), redeem_url (text), terms (text), created_at (bigint).
+    ```
+
 3. **Important Notes**:
-   - Ensure column names are in **camelCase** (e.g., `userId`, not `user_id`)
+   - Ensure column names are in **snake_case** (e.g., `user_id`, not `userId`)
    - For timestamps, use **BigInt** or **Number** type
    - Mark the first column as **Primary Key** for each table
    - For optional fields, ensure they're marked as **nullable**

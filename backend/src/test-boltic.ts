@@ -49,10 +49,9 @@ async function runTests() {
     // ==== TEST 2: Insert User ====
     console.log("🧪 TEST 2: Insert Test User");
     console.log("━".repeat(60));
-    const testUserId = `test-user-${Date.now()}`;
+    const testMobile = `+91${Math.floor(Date.now() / 1000)}`;
     const testUser = {
-      userId: testUserId,
-      fyndUserId: "fynd-test-123",
+      mobileNumber: testMobile,
       coinsBalance: 100,
       dailyLoginStreak: 1,
       lastLoginDate: new Date().toISOString(),
@@ -63,7 +62,7 @@ async function runTests() {
     };
     try {
       await boltic.insertRecord("users", testUser);
-      console.log(`✓ User inserted with ID: ${testUserId}\n`);
+      console.log(`✓ User inserted with Mobile: ${testMobile}\n`);
       testsPassed++;
     } catch (error) {
       console.error("✗ Failed:", error);
@@ -75,12 +74,11 @@ async function runTests() {
     console.log("━".repeat(60));
     let retrievedUser: any = null;
     try {
-      retrievedUser = await boltic.getUser(testUserId);
+      retrievedUser = await boltic.getUser(testMobile);
       if (retrievedUser) {
         console.log("✓ User retrieved successfully");
-        console.log(`  - ID: ${retrievedUser.user_id}`);
-        console.log(`  - Fynd User ID: ${retrievedUser.fynd_user_id}`);
-        console.log(`  - Coins Balance: ${retrievedUser.coins_balance}\n`);
+        console.log(`  - Mobile: ${retrievedUser.mobileNumber}`);
+        console.log(`  - Coins Balance: ${retrievedUser.coinsBalance}\n`);
         testsPassed++;
       } else {
         console.error("✗ User not found after insertion");
@@ -96,7 +94,8 @@ async function runTests() {
     console.log("━".repeat(60));
     try {
       await boltic.insertLeaderboardEntry({
-        userId: testUserId,
+        id: "will-be-generated",
+        mobileNumber: testMobile,
         gameName: "sandfall",
         score: 1234,
         weekNumber: 1,
@@ -119,7 +118,7 @@ async function runTests() {
       if (leaderboard.length > 0) {
         const topEntry = leaderboard[0] as any;
         console.log(
-          `  - Top Score: ${topEntry.score} (User: ${topEntry.user_id})\n`
+          `  - Top Score: ${topEntry.score} (User: ${topEntry.mobileNumber})\n`
         );
       }
       testsPassed++;
@@ -132,7 +131,7 @@ async function runTests() {
     console.log("🧪 TEST 6: Update User Data");
     console.log("━".repeat(60));
     try {
-      const updated = await boltic.updateUser(testUserId, {
+      const updated = await boltic.updateUser(testMobile, {
         coinsBalance: 250,
         totalWins: 5,
       });
@@ -140,12 +139,35 @@ async function runTests() {
         console.log("✓ User updated successfully");
         const updatedUser = updated as any;
         console.log(
-          `  - New Coins Balance: ${updatedUser.coins_balance || 250}`
+          `  - New Coins Balance: ${updatedUser.coinsBalance || 250}`
         );
-        console.log(`  - New Total Wins: ${updatedUser.total_wins || 5}\n`);
+        console.log(`  - New Total Wins: ${updatedUser.totalWins || 5}\n`);
         testsPassed++;
       } else {
         console.error("✗ Update returned null");
+        testsFailed++;
+      }
+    } catch (error) {
+      console.error("✗ Failed:", error);
+      testsFailed++;
+    }
+
+    // ==== TEST 7: User Contact Mapping ====
+    console.log("🧪 TEST 7: User Contact Mapping");
+    console.log("━".repeat(60));
+    const fyndUserId = "fynd-mapped-" + Date.now();
+    try {
+      // 1. Create Mapping
+      await boltic.createMapping(testMobile, fyndUserId);
+      console.log(`✓ Created mapping for ${testMobile} -> ${fyndUserId}`);
+
+      // 2. Retrieve Mapping
+      const mappedId = await boltic.getUserIdByPhone(testMobile);
+      if (mappedId === fyndUserId) {
+        console.log(`✓ Retrieved correct User ID: ${mappedId}\n`);
+        testsPassed++;
+      } else {
+        console.error(`✗ Validated User ID mismatch: Expected ${fyndUserId}, Got ${mappedId}`);
         testsFailed++;
       }
     } catch (error) {
