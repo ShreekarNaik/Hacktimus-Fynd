@@ -1,70 +1,347 @@
 {
   "system": {
-    "name": "FyndGames Exit Intent System",
+    "name": "FyndGames Platform",
     "version": "1.0.0-hackathon",
-    "description": "Single-tenant gamification popup triggered by exit intent on cart abandonment."
+    "description": "Promotional gaming platform integrated with Fynd Commerce for customer acquisition and cart recovery",
+    "generated": "2025-12-12T02:23:37+05:30"
   },
+
   "components": [
     {
-      "id": "storefront_script",
-      "name": "Storefront Injector Script",
-      "type": "Client-Side Script",
-      "responsibility": "Detect exit intent, check cart, open game iframe.",
-      "location": "Manual injection into Store Theme (Option 1A)",
-      "logic": "IF (mouse_leave AND user_has_cart AND !game_played_session) THEN open_iframe(frontend_url + '?mode=popup&context=' + user_context)"
+      "id": "popup_script",
+      "name": "Exit-Intent Popup Script",
+      "type": "Client-Side JavaScript",
+      "location": "/popup/popup.js",
+      "responsibility": "Detect user exit intent, check cart status, trigger game iframe",
+      "status": "implemented",
+      "config": {
+        "exitThreshold": 20,
+        "minCartValue": 0,
+        "triggerOnce": true,
+        "cookieExpiry": 86400000
+      },
+      "interfaces": {
+        "outbound": ["frontend_app"],
+        "events": ["mouseleave", "postMessage"]
+      }
     },
     {
       "id": "frontend_app",
-      "name": "Game Frontend",
-      "type": "React Application",
+      "name": "FyndGames Frontend",
+      "type": "React SPA",
       "location": "/frontend",
-      "responsibility": "Render game, handle gameplay, display reward.",
-      "modifications": [
-        "Add 'Popup Mode' (hide nav/sidebar).",
-        "Parse 'user_context' from URL query params.",
-        "Auto-login/create mock user based on context."
-      ]
+      "responsibility": "Game rendering, user authentication, rewards display",
+      "status": "implemented",
+      "technology": {
+        "framework": "React 18",
+        "language": "TypeScript",
+        "bundler": "Vite",
+        "styling": "TailwindCSS"
+      },
+      "pages": [
+        { "route": "/", "component": "Dashboard", "auth": true },
+        { "route": "/login", "component": "Login", "auth": false },
+        { "route": "/game/sandfall", "component": "SandFall", "auth": true },
+        { "route": "/game/spin", "component": "SpinWheel", "auth": true },
+        { "route": "/game/scratch", "component": "ScratchCard", "auth": true },
+        { "route": "/game/quiz", "component": "Quiz", "auth": true },
+        { "route": "/leaderboard", "component": "Leaderboard", "auth": true },
+        { "route": "/profile", "component": "Profile", "auth": true },
+        { "route": "/admin/login", "component": "AdminLogin", "auth": false },
+        { "route": "/admin/dashboard", "component": "AdminDashboard", "auth": "admin" }
+      ],
+      "modes": {
+        "standalone": "Full navigation and auth",
+        "popup": "Minimal UI, auto-auth from context, postMessage communication"
+      },
+      "interfaces": {
+        "outbound": ["backend_api"],
+        "config": {
+          "VITE_USE_DEMO": "Toggle mock adapter"
+        }
+      }
     },
     {
       "id": "backend_api",
-      "name": "Gamification Backend",
-      "type": "Node.js/Express API",
+      "name": "Backend API",
+      "type": "Node.js Express Server",
       "location": "/backend",
-      "responsibility": "Manage sessions, issue rewards, log to Boltic.",
-      "endpoints": [
-        "POST /api/games/start (supports auto-create user)",
-        "POST /api/games/submit",
-        "POST /api/webhooks/fynd-cart (Legacy support)"
+      "responsibility": "Session management, score validation, reward generation, Boltic/Fynd integration",
+      "status": "implemented",
+      "technology": {
+        "runtime": "Node.js 20+",
+        "framework": "Express.js",
+        "language": "TypeScript"
+      },
+      "routes": [
+        { "path": "/api/auth/*", "description": "Authentication routes" },
+        { "path": "/api/user/*", "description": "User profile management" },
+        { "path": "/api/games/*", "description": "Game session and leaderboard APIs" },
+        { "path": "/api/webhooks/*", "description": "Fynd webhook handlers" },
+        { "path": "/abandoned_cart", "description": "Boltic workflow callback for cart recovery" }
+      ],
+      "interfaces": {
+        "outbound": ["boltic_tables", "fynd_platform"],
+        "config": {
+          "PORT": "Server port (default: 3000)",
+          "BOLTIC_API_KEY": "Boltic PAT token",
+          "BOLTIC_REGION": "Boltic region (default: asia-south1)",
+          "FRONTEND_URL": "Frontend URL for game links",
+          "GAME_WIN_RATE": "Configurable win rate (default: 0.3)"
+        }
+      }
+    },
+    {
+      "id": "boltic_tables",
+      "name": "Boltic Tables",
+      "type": "External Database Service",
+      "location": "https://asia-south1.console.boltic.io",
+      "responsibility": "Persistent storage for users, sessions, leaderboards, rewards",
+      "status": "requires_manual_setup",
+      "tables": [
+        {
+          "name": "users",
+          "primaryKey": "user_id",
+          "columns": ["user_id", "fynd_user_id", "coins_balance", "daily_login_streak", "last_login_date", "total_games_played", "total_wins", "wins_this_week", "created_at"]
+        },
+        {
+          "name": "game_sessions",
+          "primaryKey": "session_id",
+          "columns": ["session_id", "user_id", "game_name", "score", "coins_earned", "reward_tier", "completed_at", "is_cart_recovery", "cart_id"]
+        },
+        {
+          "name": "leaderboard",
+          "primaryKey": "id",
+          "columns": ["id", "user_id", "game_name", "score", "week_number", "timestamp"]
+        },
+        {
+          "name": "rewards",
+          "primaryKey": "reward_id",
+          "columns": ["reward_id", "user_id", "reward_type", "reward_tier", "discount_percentage", "coupon_code", "expiry_date", "redeemed", "distributed_at"]
+        },
+        {
+          "name": "cart_abandonments",
+          "primaryKey": "cart_id",
+          "columns": ["cart_id", "user_id", "items", "cart_value", "created_at", "notification_sent", "game_link", "converted"]
+        },
+        {
+          "name": "User Contact Mapping",
+          "primaryKey": "user_id",
+          "columns": ["user_id", "mobile_number", "email", "company_id", "application_id"],
+          "note": "Used by Boltic workflows for SMS"
+        }
       ]
     },
     {
-      "id": "boltic_integration",
-      "name": "Boltic Data Layer",
-      "type": "External Service",
-      "responsibility": "Persist users, sessions, and rewards.",
-      "tables": ["users", "game_sessions", "rewards"]
-    }
-  ],
-  "data_flows": [
-    {
-      "from": "storefront_script",
-      "to": "frontend_app",
-      "mechanism": "IFrame URL Params",
-      "data": "Cart ID, UserContext (Name/ID inferred from Store SDK)"
+      "id": "boltic_workflows",
+      "name": "Boltic Workflows",
+      "type": "Serverless Automation",
+      "location": "/boltic-workflow-exports",
+      "responsibility": "Automated triggers and integrations",
+      "status": "draft",
+      "workflows": [
+        {
+          "name": "Abandoned Cart Trigger",
+          "trigger": "Fynd webhook (cart.update)",
+          "actions": ["Wait 100min", "Re-fetch cart", "Check purchase status", "POST /abandoned_cart", "Send SMS", "Log to table"],
+          "status": "draft"
+        },
+        {
+          "name": "Create User in DB",
+          "trigger": "Fynd webhook (user.create)",
+          "actions": ["Extract user data", "Insert to User Contact Mapping table"],
+          "status": "draft"
+        },
+        {
+          "name": "Make Coupon",
+          "trigger": "HTTP POST",
+          "actions": ["Search user", "Create coupon via Fynd API", "Get mobile number", "Send SMS"],
+          "status": "draft"
+        },
+        {
+          "name": "Get Redeem URL",
+          "trigger": "HTTP GET",
+          "actions": ["Apply coupon to cart", "Return cart URL or error"],
+          "status": "completed"
+        }
+      ]
     },
     {
-      "from": "frontend_app",
-      "to": "backend_api",
-      "mechanism": "REST API",
-      "data": "Score, GameID, Auto-Auth Credentials"
-    },
-    {
-      "from": "backend_api",
-      "to": "boltic_integration",
-      "mechanism": "Boltic SDK",
-      "data": "Persistent Records"
+      "id": "fynd_platform",
+      "name": "Fynd Platform",
+      "type": "External E-commerce Platform",
+      "location": "https://api.fynd.com",
+      "responsibility": "E-commerce operations, user management, coupon generation",
+      "status": "external",
+      "integrations": [
+        {
+          "api": "Cart API",
+          "operations": ["getCart", "applyCoupon"],
+          "webhooks": ["cart.create", "cart.update"]
+        },
+        {
+          "api": "User API",
+          "operations": ["verifyMobileOTP", "registerWithForm", "searchUsers"],
+          "webhooks": ["user.create"]
+        },
+        {
+          "api": "Coupon API",
+          "operations": ["createCoupon"],
+          "note": "Requires Platform SDK with company credentials"
+        }
+      ],
+      "identifiers": {
+        "applicationId": "6936cfcb5528738f3bdab871",
+        "storeUrl": "craftkart.fynd.io"
+      }
     }
   ],
-  "user_identity_strategy": "Auto-Create",
-  "identity_logic": "Username = `guest_${timestamp}_${random}` OR derived from Store SDK context if available. Backend treats this as a valid user for the session."
+
+  "dataFlows": [
+    {
+      "id": "exit_intent_flow",
+      "name": "Exit Intent → Game Flow",
+      "steps": [
+        { "from": "fynd_storefront", "to": "popup_script", "data": "User exit intent detected" },
+        { "from": "popup_script", "to": "frontend_app", "data": "IFrame with context (userId, cartId, mode=popup)", "mechanism": "URL params" },
+        { "from": "frontend_app", "to": "backend_api", "data": "POST /games/start", "mechanism": "REST" },
+        { "from": "frontend_app", "to": "backend_api", "data": "POST /games/submit (score)", "mechanism": "REST" },
+        { "from": "backend_api", "to": "boltic_tables", "data": "INSERT leaderboard, rewards", "mechanism": "Boltic SDK" },
+        { "from": "frontend_app", "to": "popup_script", "data": "postMessage: reward data", "mechanism": "postMessage" },
+        { "from": "popup_script", "to": "fynd_storefront", "data": "Optional: auto-apply coupon", "mechanism": "Fynd SDK" }
+      ]
+    },
+    {
+      "id": "cart_abandonment_flow",
+      "name": "Cart Abandonment → SMS Recovery",
+      "steps": [
+        { "from": "fynd_platform", "to": "boltic_workflows", "data": "cart.update webhook", "mechanism": "HTTP" },
+        { "from": "boltic_workflows", "action": "Wait 100 minutes" },
+        { "from": "boltic_workflows", "to": "fynd_platform", "data": "Re-fetch cart state", "mechanism": "Fynd SDK" },
+        { "from": "boltic_workflows", "to": "backend_api", "data": "POST /abandoned_cart?user_id=X", "mechanism": "HTTP" },
+        { "from": "backend_api", "returns": "{ url: game_link }" },
+        { "from": "boltic_workflows", "to": "user", "data": "SMS with game link", "mechanism": "Boltic SMS" },
+        { "from": "boltic_workflows", "to": "boltic_tables", "data": "INSERT cart_abandonments", "mechanism": "SQL" }
+      ]
+    },
+    {
+      "id": "reward_redemption_flow",
+      "name": "Reward → Cart Redemption",
+      "steps": [
+        { "from": "frontend_app", "to": "boltic_workflows", "data": "GET /get_redeem_link?coupon=X&cart_id=Y", "mechanism": "HTTP" },
+        { "from": "boltic_workflows", "to": "fynd_platform", "data": "applyCoupon to cart", "mechanism": "Fynd SDK" },
+        { "from": "boltic_workflows", "returns": "{ url: cart_page_url }" },
+        { "from": "frontend_app", "action": "Redirect to cart page" }
+      ]
+    }
+  ],
+
+  "ownershipBoundaries": [
+    {
+      "entity": "User Identity",
+      "primaryOwner": "Fynd Platform",
+      "localCache": "Backend mock DB, Boltic Tables",
+      "syncMechanism": "Webhook (user.create)"
+    },
+    {
+      "entity": "Cart State",
+      "primaryOwner": "Fynd Platform",
+      "localCache": "Backend mock DB (abandoned only)",
+      "syncMechanism": "Webhook (cart.update), API fetch"
+    },
+    {
+      "entity": "Game Sessions",
+      "primaryOwner": "Backend API + Boltic Tables",
+      "note": "Dual-write to mock DB and Boltic"
+    },
+    {
+      "entity": "Leaderboard",
+      "primaryOwner": "Boltic Tables",
+      "cycle": "Weekly (ISO week number)"
+    },
+    {
+      "entity": "Rewards/Coupons",
+      "primaryOwner": "Fynd Platform (coupon code)",
+      "localCopy": "Backend mock DB, Boltic Tables (metadata)"
+    }
+  ],
+
+  "adapters": [
+    {
+      "name": "BolticService",
+      "location": "/backend/src/services/bolticService.ts",
+      "responsibility": "Boltic Tables CRUD operations via SDK",
+      "methods": ["insertLeaderboardEntry", "getLeaderboard", "removeLeaderboardEntry", "insertRecord", "getUser", "updateUser", "getUserGameSessions", "getUserRewards", "getCartAbandonment", "updateCartAbandonment", "sendNotification"]
+    },
+    {
+      "name": "MockFyndService",
+      "location": "/backend/src/services/mock/fynd.ts",
+      "responsibility": "Mock Fynd Platform operations for demo",
+      "methods": ["createCoupon", "getCart", "applyCoupon"]
+    },
+    {
+      "name": "MockDB",
+      "location": "/backend/src/services/mock/db.ts",
+      "responsibility": "In-memory storage for demo mode",
+      "collections": ["users", "sessions", "leaderboards", "rewards", "carts"]
+    },
+    {
+      "name": "Frontend Mock Adapter",
+      "location": "/frontend/src/api/mockAdapter.ts",
+      "responsibility": "Axios adapter for frontend demo mode",
+      "toggle": "VITE_USE_DEMO=true"
+    }
+  ],
+
+  "configuration": {
+    "backend": {
+      "PORT": { "default": "3000", "description": "Server port" },
+      "BOLTIC_API_KEY": { "required": true, "description": "Boltic PAT token" },
+      "BOLTIC_REGION": { "default": "asia-south1", "description": "Boltic region" },
+      "FRONTEND_URL": { "default": "http://localhost:5173", "description": "Frontend URL for game links" },
+      "GAME_WIN_RATE": { "default": "0.3", "description": "Win probability (0-1)" }
+    },
+    "frontend": {
+      "VITE_USE_DEMO": { "default": "false", "description": "Enable mock adapter" }
+    },
+    "popup": {
+      "gameUrl": { "default": "http://localhost:5173", "description": "FyndGames frontend URL" },
+      "game": { "default": "sandfall", "description": "Default recovery game" },
+      "exitThreshold": { "default": 20, "description": "Pixels from top to trigger" },
+      "minCartValue": { "default": 0, "description": "Minimum cart value to trigger" }
+    },
+    "boltic_workflows": {
+      "BACKEND_BASE_URL": { "value": "localhost:3000", "note": "Update for production" },
+      "cart_value_threshold": { "value": 500, "description": "Minimum cart value for recovery" },
+      "authorization_token": { "note": "OAuth token, needs rotation" }
+    }
+  },
+
+  "security": {
+    "authentication": {
+      "frontend": "JWT token in localStorage",
+      "backend": "Token in Authorization header (validation not enforced in MVP)",
+      "admin": "Separate AdminContext with admin-specific token"
+    },
+    "concerns": [
+      { "issue": "No auth middleware on backend routes", "severity": "medium", "mitigation": "Add auth middleware for production" },
+      { "issue": "SQL string interpolation in BolticService", "severity": "low", "mitigation": "escapeSql helper used, parameterized queries preferred" },
+      { "issue": "Hardcoded OAuth token in workflow", "severity": "medium", "mitigation": "Use Boltic secrets management" }
+    ]
+  },
+
+  "gameLogic": {
+    "games": ["sandfall", "spin", "scratch", "quiz"],
+    "coinRates": {
+      "quiz": { "formula": "score * 0.1", "description": "Score / 10" },
+      "pattern": { "formula": "score * 0.2", "description": "Score / 5" },
+      "sandfall": { "formula": "score * 0.05", "description": "Score / 20" }
+    },
+    "winLimits": {
+      "daily": 1,
+      "weekly": 3
+    },
+    "rewardTiers": ["GRAND", "PREMIUM", "STANDARD", "BASIC", "LEGENDARY"],
+    "leaderboardCycle": "Weekly (ISO week number, resets Sunday midnight)"
+  }
 }

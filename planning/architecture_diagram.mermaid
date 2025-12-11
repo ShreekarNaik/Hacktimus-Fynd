@@ -1,50 +1,106 @@
 graph TD
-    subgraph Client [Browser / Storefront]
+    subgraph Client [User Experience]
         User((User))
-        Store[Fynd Store Page]
-        Script[Injected loader.js]
-        IFrame[Game Popup IFrame]
+        
+        subgraph FyndStore [Fynd Storefront]
+            StoreUI[Store UI]
+            PopupScript[Popup Script (popup.js)]
+            FyndSDK[Fynd Platform SDK]
+        end
+        
+        subgraph FyndGames [FyndGames App]
+            Frontend[React Frontend]
+            PopupMode[Popup Mode]
+            FullMode[Standalone Mode]
+        end
     end
 
-    subgraph Server [Backend Infrastructure]
-        API[Node.js Backend]
-        Boltic[(Boltic Tables)]
-        FyndAPI[Fynd Platform API]
+    subgraph Backend [Backend API (Node.js/Express)]
+        API[Express Server 3000]
+        
+        subgraph Controllers
+            GameCtrl[Game Controller]
+            Webhooks[Webhook Handler]
+            AuthCtrl[Auth Controller]
+        end
+        
+        subgraph Services
+            BolticSvc[BolticService]
+            MockFynd[MockFyndService]
+            MockDB[(In-Memory Mock DB)]
+        end
     end
 
-    User -- "Browses & Adds to Cart" --> Store
-    User -- "Moves mouse to exit" --> Store
-    Store -- "Event: mouseleave" --> Script
-    Script -- "Check: Cart > 0" --> Script
-    Script -- "Infers User Context" --> Script
-    Script -- "Opens IFrame" --> IFrame
-    
-    IFrame -- "Auto-Login (Props)" --> API
-    API -- "Create/Fetch User" --> Boltic
-    API -- "Return Session Token" --> IFrame
-    
-    User -- "Plays Game" --> IFrame
-    IFrame -- "Submit Score" --> API
-    API -- "Calc Reward" --> API
-    API -- "Create Coupon" --> FyndAPI
-    FyndAPI -- "Coupon Code" --> API
-    API -- "Save Reward" --> Boltic
-    API -- "Return Code" --> IFrame
-    IFrame -- "Show Coupon" --> User
-
-    subgraph Workflows [Boltic Workflows]
-        W_Cart[Abandoned Cart Workflow]
-        W_User[Create User Workflow]
-        W_Coupon[Make Coupon Workflow]
+    subgraph Boltic [Boltic Platform]
+        subgraph Tables [Boltic Tables]
+            T_Users[users]
+            T_Sessions[game_sessions]
+            T_Leaderboard[leaderboard]
+            T_Rewards[rewards]
+            T_Abandon[cart_abandonments]
+        end
+        
+        subgraph Workflows [Boltic Workflows]
+            W_Abandon[Abandoned Cart Trigger]
+            W_Coupon[Make Coupon]
+            W_Redeem[Get Redeem URL]
+            W_UserSync[Create User in DB]
+        end
+        
+        subgraph Infra
+            BolticSMS[SMS Service]
+        end
     end
 
-    %% Workflow Integrations
-    FyndAPI -- "Webhook: cart.update" --> W_Cart
-    W_Cart -- "Log & SMS" --> Boltic
+    subgraph External [Fynd Platform]
+        FyndAPI[Platform APIs]
+        FyndCart[Cart Service]
+        FyndUser[User Service]
+    end
+
+    %% Flows
+
+    %% 1. Exit Intent Flow
+    User -- "Browses" --> StoreUI
+    User -- "Exit Intent" --> PopupScript
+    PopupScript -- "Check Cart" --> FyndSDK
+    PopupScript -- "Open IFrame" --> PopupMode
+    PopupMode -- "Auto-Auth" --> Frontend
+    Frontend -- "Start Session" --> API
+    API -- "Start" --> GameCtrl
+    Frontend -- "Submit Score" --> API
+    GameCtrl -- "Calc Reward" --> MockDB
+    GameCtrl -- "Sync Leaderboard" --> BolticSvc
+    BolticSvc -- "Insert" --> T_Leaderboard
     
-    FyndAPI -- "Webhook: user.create" --> W_User
-    W_User -- "Sync User" --> Boltic
+    %% 2. Cart Abandonment Flow
+    FyndCart -- "Webhook: cart.update" --> W_Abandon
+    W_Abandon -- "Wait & Check" --> W_Abandon
+    W_Abandon -- "POST /abandoned_cart" --> Webhooks
+    Webhooks -- "Gen Link" --> W_Abandon
+    W_Abandon -- "Send SMS" --> BolticSMS
+    BolticSMS -- "SMS Link" --> User
     
-    API -- "Webhook: Generate Reward" --> W_Coupon
-    W_Coupon -- "Create Coupon" --> FyndAPI
-    W_Coupon -- "Send SMS" --> Boltic
+    %% 3. Redemption Flow
+    User -- "Click Link" --> Frontend
+    Frontend -- "Claim Reward" --> W_Redeem
+    W_Redeem -- "Apply Coupon" --> FyndCart
+    W_Redeem -- "Redirect" --> StoreUI
+
+    %% 4. Data Persistence
+    BolticSvc -- "CRUD" --> Tables
+    Webhooks -- "Log Abandonment" --> T_Abandon
+    
+    %% 5. User Sync
+    FyndUser -- "Webhook: user.create" --> W_UserSync
+    W_UserSync -- "Insert" --> T_Users
+
+    classDef client fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef backend fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef boltic fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef external fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+
+    class Client,FyndStore,FyndGames client;
+    class Backend,Controllers,Services backend;
+    class Boltic,Tables,Workflows,Infra boltic;
+    class External,FyndAPI,FyndCart,FyndUser external;

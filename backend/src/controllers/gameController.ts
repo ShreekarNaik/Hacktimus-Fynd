@@ -16,6 +16,21 @@ const COIN_RATES: Record<string, number> = {
   'sandfall': 0.05 // Score / 20
 };
 
+// Win rate configuration (can be made env-configurable)
+const WIN_RATE = parseFloat(process.env.GAME_WIN_RATE || '0.3'); // 30% default
+
+/**
+ * Calculate ISO week number for a given date
+ * Used for weekly leaderboard cycles
+ */
+function getWeekNumber(date: Date = new Date()): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
 export const startGame = async (req: Request, res: Response) => {
   const { userId, gameName, fyndUserId } = req.body;
   
@@ -93,8 +108,8 @@ export const submitScore = async (req: Request, res: Response) => {
 
   // Check Reward Eligibility (Mock Logic)
   let reward = null;
-  // If cart recovery or Lucky user (random chance for demo)
-  const isWinner = Math.random() > 0.7; // 30% win rate for demo
+  // If cart recovery or Lucky user (configurable win rate)
+  const isWinner = Math.random() < WIN_RATE; // Configurable win rate
   
   if (isWinner && user && user.winsThisWeek < WIN_LIMITS.weekly) {
     // Generate Reward via Fynd Service
@@ -122,11 +137,12 @@ export const submitScore = async (req: Request, res: Response) => {
   }
 
   // Update Leaderboard via Boltic Service
+  const currentWeek = getWeekNumber();
   await boltic.insertLeaderboardEntry({
     userId: session.userId,
     gameName: session.gameName,
     score,
-    weekNumber: 1, // Mock week
+    weekNumber: currentWeek,
     timestamp: Date.now()
   });
 
@@ -144,8 +160,9 @@ export const submitScore = async (req: Request, res: Response) => {
 export const claimLeaderboardReward = async (req: Request, res: Response) => {
     const { userId, gameName } = req.body;
     
-    // 1. Verify User is #1
-    const leaderboard = await boltic.getLeaderboard(gameName, 1);
+    // 1. Verify User is #1 for current week
+    const currentWeek = getWeekNumber();
+    const leaderboard = await boltic.getLeaderboard(gameName, currentWeek);
     const topEntry = leaderboard[0];
     
     if (!topEntry || topEntry.userId !== userId) {
@@ -191,7 +208,8 @@ export const getPendingRewards = async (req: Request, res: Response) => {
     const pending = [];
     
     for (const g of games) {
-        const lb = await boltic.getLeaderboard(g, 1);
+        const currentWeek = getWeekNumber();
+        const lb = await boltic.getLeaderboard(g, currentWeek);
         if (lb.length > 0 && lb[0].userId === String(userId)) {
             pending.push({
                 gameName: g,
@@ -206,6 +224,7 @@ export const getPendingRewards = async (req: Request, res: Response) => {
 
 export const getLeaderboard = async (req: Request, res: Response) => {
   const { gameName } = req.params;
-  const leaderboard = await boltic.getLeaderboard(gameName, 1); // Mock Week 1
+  const currentWeek = getWeekNumber();
+  const leaderboard = await boltic.getLeaderboard(gameName, currentWeek);
   res.json(leaderboard);
 };
