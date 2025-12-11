@@ -29,15 +29,15 @@
   // =============================================================================
 
   const DEFAULT_CONFIG = {
-    companyId: '',
-    applicationId: '',
+    companyId: '12435',
+    applicationId: '6936cfcb5528738f3bdab871',
     gameUrl: 'http://localhost:5173',  // FyndGames frontend URL
     game: 'sandfall',                   // Default game for cart recovery
     triggerOnce: true,                  // Only show popup once per session
     exitThreshold: 20,                  // Mouse Y position to trigger (pixels from top)
     minCartValue: 0,                    // Minimum cart value to show popup (0 = any)
     cookieExpiry: 24 * 60 * 60 * 1000,  // Cookie expiry in ms (24 hours)
-    debug: false
+    debug: true
   };
 
   // Merge user config with defaults
