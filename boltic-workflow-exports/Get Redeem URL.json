@@ -1,0 +1,415 @@
+{
+  "meta": {},
+  "name": "Get Redeem URL",
+  "description": "",
+  "active": true,
+  "version": "0.0.0",
+  "status": "draft",
+  "source": "boltic",
+  "parent_id": "",
+  "global_variables": {
+    "cart_id": "cart_id",
+    "coupon_code": "coupon_code"
+  },
+  "retry_config": {
+    "initial_interval": 1000,
+    "maximum_attempts": 1,
+    "maximum_interval": 100000,
+    "backoff_coefficient": 2
+  },
+  "nodes": [
+    {
+      "id": "http1",
+      "data": {
+        "name": "HTTP",
+        "type": "http",
+        "properties": {
+          "headers": {},
+          "methods": [
+            "GET"
+          ],
+          "endpoint": "",
+          "auth_type": "none",
+          "query_params": {
+            "coupon": "{{global_variables.coupon_code}}",
+            "cart_id": "{{global_variables.cart_id}}"
+          },
+          "state_params": {},
+          "test_payload": {},
+          "integration_slug": "blt-int.http"
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        },
+        "activity_comment": {
+          "visible": false
+        }
+      },
+      "type": "trigger",
+      "style": {
+        "zIndex": 11
+      },
+      "zIndex": 11,
+      "position": {
+        "x": 28.312173719995428,
+        "y": 274.22557801876366
+      },
+      "activity_data": {
+        "id": "6785743b-f934-4111-a619-bea2e0c7efc5",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [],
+      "outgoingPorts": [
+        {
+          "id": "logConsole1",
+          "name": "logConsole1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "logConsole1",
+      "data": {
+        "name": "logConsole1",
+        "type": "logConsole",
+        "properties": {
+          "console": [
+            "{{http.query_params.coupon}}"
+          ],
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.logconsole",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 12
+      },
+      "zIndex": 12,
+      "position": {
+        "x": 364.926547054956,
+        "y": 291.8777030924831
+      },
+      "activity_data": {
+        "id": "193d9a66-ab12-4268-a733-1462cb2a86d3",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "http1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "fyndPlatformApplication1",
+          "name": "fyndPlatformApplication1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "response1",
+      "data": {
+        "name": "response1",
+        "type": "response",
+        "properties": {
+          "status_code": 200,
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "response_body": "{\"url\":\"https://craftkart.fynd.io/cart/bag\"}",
+          "response_type": "json",
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.response",
+          "response_headers": {}
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 21
+      },
+      "zIndex": 21,
+      "position": {
+        "x": 1416.0996844450522,
+        "y": 188.26468918930559
+      },
+      "activity_data": {
+        "id": "a42706c7-3cb6-4d04-adf7-025e183222cb",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "ifElse1"
+      ],
+      "outgoingPorts": [],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "fyndPlatformApplication1",
+      "data": {
+        "name": "fyndPlatformApplication1",
+        "type": "applicationFdkActivity",
+        "properties": {
+          "id": "{{http.query_params.cart_id}}",
+          "secret": "",
+          "resource": "cart",
+          "operation": "cart.applyCoupon",
+          "coupon_code": "{{http.query_params.coupon}}",
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "activity_name": "fynd_platform_application",
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.fynd-platform-application",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 18
+      },
+      "zIndex": 18,
+      "position": {
+        "x": 705.1811986188965,
+        "y": 282.1764766586643
+      },
+      "activity_data": {
+        "id": "c4d7aa98-e426-4e67-9149-3c1a033951de",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "logConsole1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "ifElse1",
+          "name": "ifElse1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "response2",
+      "data": {
+        "name": "response2",
+        "type": "response",
+        "properties": {
+          "status_code": 400,
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "response_body": "{\"error\":\"Invalid Coupon\"}",
+          "response_type": "json",
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.response",
+          "response_headers": {}
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 23
+      },
+      "zIndex": 23,
+      "position": {
+        "x": 1393.6867791982186,
+        "y": 363.87180508451314
+      },
+      "activity_data": {
+        "id": "a42706c7-3cb6-4d04-adf7-025e183222cb",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "ifElse1"
+      ],
+      "outgoingPorts": [],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "ifElse1",
+      "data": {
+        "name": "ifElse1",
+        "type": "ifActivity",
+        "properties": {
+          "branches": [
+            {
+              "ref": "if",
+              "operators": [],
+              "conditions": [
+                {
+                  "data": "",
+                  "fact": "{{fyndPlatformApplication1.result.is_valid}}",
+                  "operator": "is_true"
+                }
+              ],
+              "operator_visible": []
+            },
+            {
+              "ref": "else"
+            }
+          ],
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.if-else"
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "condition",
+      "options": {
+        "conditions": []
+      },
+      "position": {
+        "x": 1008.1811986188965,
+        "y": 280.6764766586643
+      },
+      "activity_data": {
+        "id": "27be6169-14d2-48fc-b6e8-7ac5e89aca34",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "fyndPlatformApplication1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "response1",
+          "ref": "if",
+          "name": "response1"
+        },
+        {
+          "id": "response2",
+          "ref": "else",
+          "name": "response2"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_3",
+      "type": "smooth",
+      "source": "http1",
+      "target": "logConsole1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_4",
+      "type": "smooth",
+      "source": "logConsole1",
+      "target": "fyndPlatformApplication1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_5",
+      "type": "smooth",
+      "source": "fyndPlatformApplication1",
+      "target": "ifElse1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_6",
+      "type": "smooth",
+      "source": "ifElse1",
+      "target": "response1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "if",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_7",
+      "type": "smooth",
+      "source": "ifElse1",
+      "target": "response2",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "else",
+      "targetHandle": "targetHandle"
+    }
+  ]
+}

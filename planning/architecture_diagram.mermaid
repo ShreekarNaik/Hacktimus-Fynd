@@ -31,3 +31,20 @@ graph TD
     API -- "Save Reward" --> Boltic
     API -- "Return Code" --> IFrame
     IFrame -- "Show Coupon" --> User
+
+    subgraph Workflows [Boltic Workflows]
+        W_Cart[Abandoned Cart Workflow]
+        W_User[Create User Workflow]
+        W_Coupon[Make Coupon Workflow]
+    end
+
+    %% Workflow Integrations
+    FyndAPI -- "Webhook: cart.update" --> W_Cart
+    W_Cart -- "Log & SMS" --> Boltic
+    
+    FyndAPI -- "Webhook: user.create" --> W_User
+    W_User -- "Sync User" --> Boltic
+    
+    API -- "Webhook: Generate Reward" --> W_Coupon
+    W_Coupon -- "Create Coupon" --> FyndAPI
+    W_Coupon -- "Send SMS" --> Boltic
