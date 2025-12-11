@@ -1,0 +1,794 @@
+{
+  "meta": {},
+  "name": "Abandoned Cart Trigger",
+  "description": "Testing the Cart Update",
+  "active": true,
+  "version": "0.0.0",
+  "status": "draft",
+  "source": "boltic",
+  "parent_id": "",
+  "global_variables": {
+    "user_id": "",
+    "BACKEND_BASE_URL": "localhost:3000",
+    "cart_prior_state": {},
+    "cart_value_threshold": 500
+  },
+  "retry_config": {
+    "initial_interval": 1000,
+    "maximum_attempts": 1,
+    "maximum_interval": 100000,
+    "backoff_coefficient": 2
+  },
+  "nodes": [
+    {
+      "id": "api1",
+      "data": {
+        "name": "post_to_backend",
+        "type": "apiActivity",
+        "properties": {
+          "body": null,
+          "method": "post",
+          "headers": {},
+          "branches": [
+            {
+              "ref": "success"
+            },
+            {
+              "ref": "failure"
+            }
+          ],
+          "endpoint": "localhost:3000",
+          "body_type": "none",
+          "api_timeout": 30000,
+          "query_params": {},
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "state_params": {},
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.api",
+          "continue_on_failure": true
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "default",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "condition",
+      "style": {
+        "zIndex": 164
+      },
+      "zIndex": 164,
+      "position": {
+        "x": -128,
+        "y": 1366
+      },
+      "activity_data": {
+        "id": "6cc1d090-334c-4377-a638-8777c48a1d07",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "ifElse1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "function2",
+          "ref": "success",
+          "name": "generate_sms_content"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bolticSms1",
+      "data": {
+        "name": "bolticSms1",
+        "type": "customActivity",
+        "properties": {
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "activity_name": "Boltic_SMS",
+          "integration_slug": "blt-int.boltic-sms"
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "",
+          "setup_and_configure": "default"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 155
+      },
+      "zIndex": 155,
+      "position": {
+        "x": -118,
+        "y": 1876
+      },
+      "activity_data": {
+        "id": "dba461f9-307f-4efa-b22d-c857345223f6",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "function2"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "bolticTables1",
+          "name": "bolticTables1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    },
+    {
+      "id": "function2",
+      "data": {
+        "name": "generate_sms_content",
+        "type": "functionActivity",
+        "properties": {
+          "func": "return { hello: \"world\" }",
+          "language": "javascript",
+          "input_data": {},
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.function",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "",
+          "setup_and_configure": "default"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 154
+      },
+      "zIndex": 154,
+      "position": {
+        "x": -170,
+        "y": 1688
+      },
+      "activity_data": {
+        "id": "4ecbff24-5f1f-4cc2-bd86-aa2263584235",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "api1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "bolticSms1",
+          "name": "bolticSms1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    },
+    {
+      "id": "bolticTables1",
+      "data": {
+        "name": "add_to_card_abandonment_table",
+        "type": "bolticTableActivity",
+        "properties": {
+          "event": "create_record",
+          "table": "",
+          "filters": [],
+          "payload": {},
+          "updates": [],
+          "database": "",
+          "tabIndex": 0,
+          "connector": "boltic",
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.boltic-tables",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "default",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 156
+      },
+      "zIndex": 156,
+      "position": {
+        "x": -130,
+        "y": 2090
+      },
+      "activity_data": {
+        "id": "ab2bb606-a075-461c-83f2-be839f43c2e7",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "bolticSms1"
+      ],
+      "outgoingPorts": [],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    },
+    {
+      "id": "fyndPlatformWebhook1",
+      "data": {
+        "name": "Fynd Platform Webhook",
+        "type": "fp_webhook",
+        "properties": {
+          "version": "1",
+          "event_id": [
+            9,
+            8
+          ],
+          "auth_meta": {},
+          "fp_auth_id": "",
+          "event_details": {
+            "event_name": "cart",
+            "event_type": "update",
+            "event_category": "application"
+          },
+          "application_id": [
+            "6936cfcb5528738f3bdab871"
+          ],
+          "custom_headers": {},
+          "integration_slug": "blt-int.fynd-platform-webhook"
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "trigger",
+      "style": {
+        "zIndex": 76
+      },
+      "zIndex": 76,
+      "position": {
+        "x": 24,
+        "y": 24
+      },
+      "activity_data": {
+        "id": "2b1e13b3-3a2a-4af5-ae8f-2a092d2d104b",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [],
+      "outgoingPorts": [
+        {
+          "id": "bolticEmail1",
+          "name": "bolticEmail1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    },
+    {
+      "id": "bolticEmail1",
+      "data": {
+        "name": "logging_step",
+        "type": "emailActivity",
+        "properties": {
+          "cc": [],
+          "to": [
+            "shreekar.aiml@gmail.com"
+          ],
+          "bcc": [],
+          "from": "craftkart_hacktimus_agent@mail.boltic.app",
+          "subject": "Webhook Trigger Log",
+          "attachments": [],
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "email_auth_id": "_BOLTIC_INTEGRATION_BOLTIC_EMAIL",
+          "email_template": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<title>Webhook Log</title>\n<style>\n  body { font-family: monospace; font-size: 14px; }\n  .section { margin-bottom: 20px; }\n  .key { font-weight: bold; }\n  pre { white-space: pre-wrap; }\n</style>\n</head>\n<body>\n\n<div class=\"section\">\n  <div class=\"key\">Application ID:</div>\n  <div>{{ payload.application_id }}</div>\n\n  <div class=\"key\">Company ID:</div>\n  <div>{{ payload.company_id }}</div>\n\n  <div class=\"key\">Contains:</div>\n  <ul>\n    {% for item in payload.contains %}\n      <li>{{ item }}</li>\n    {% endfor %}\n  </ul>\n</div>\n\n<div class=\"section\">\n  <div class=\"key\">Event:</div>\n  <pre>\nCategory: {{ payload.event.category }}\nCreated Timestamp: {{ payload.event.created_timestamp }}\nID: {{ payload.event.id }}\nName: {{ payload.event.name }}\nType: {{ payload.event.type }}\nVersion: {{ payload.event.version }}\nTrace IDs:\n{% for t in payload.event.trace_id %}\n  - {{ t }}\n{% endfor %}\n  </pre>\n</div>\n\n<div class=\"section\">\n  <div class=\"key\">Cart:</div>\n  <pre>\nID: {{ payload.payload.cart.id }}\nValid: {{ payload.payload.cart.is_valid }}\nSuccess: {{ payload.payload.cart.success }}\nComment: {{ payload.payload.cart.comment }}\nMessage: {{ payload.payload.cart.message }}\nCurrency Code: {{ payload.payload.cart.currency.code }}\nCurrency Symbol: {{ payload.payload.cart.currency.symbol }}\nLast Modified: {{ payload.payload.cart.last_modified }}\nGSTIN: {{ payload.payload.cart.gstin }}\n  </pre>\n</div>\n\n<div class=\"section\">\n  <div class=\"key\">Breakup Values:</div>\n\n  <div class=\"key\">Coupon:</div>\n  <pre>\nCode: {{ payload.payload.cart.breakup_values.coupon.code }}\nApplied: {{ payload.payload.cart.breakup_values.coupon.is_applied }}\nMessage: {{ payload.payload.cart.breakup_values.coupon.message }}\nType: {{ payload.payload.cart.breakup_values.coupon.type }}\nUID: {{ payload.payload.cart.breakup_values.coupon.uid }}\nValue: {{ payload.payload.cart.breakup_values.coupon.value }}\n  </pre>\n\n  <div class=\"key\">Loyalty Points:</div>\n  <pre>\nApplicable: {{ payload.payload.cart.breakup_values.loyalty_points.applicable }}\nDescription: {{ payload.payload.cart.breakup_values.loyalty_points.description }}\nApplied: {{ payload.payload.cart.breakup_values.loyalty_points.is_applied }}\nTotal: {{ payload.payload.cart.breakup_values.loyalty_points.total }}\n  </pre>\n\n  <div class=\"key\">Raw:</div>\n  <pre>\nCOD Charge: {{ payload.payload.cart.breakup_values.raw.cod_charge }}\nConvenience Fee: {{ payload.payload.cart.breakup_values.raw.convenience_fee }}\nCoupon: {{ payload.payload.cart.breakup_values.raw.coupon }}\nDelivery Charge: {{ payload.payload.cart.breakup_values.raw.delivery_charge }}\nDiscount: {{ payload.payload.cart.breakup_values.raw.discount }}\nFynd Cash: {{ payload.payload.cart.breakup_values.raw.fynd_cash }}\nGST Charges: {{ payload.payload.cart.breakup_values.raw.gst_charges }}\nMOP Total: {{ payload.payload.cart.breakup_values.raw.mop_total }}\nMRP Total: {{ payload.payload.cart.breakup_values.raw.mrp_total }}\nSubtotal: {{ payload.payload.cart.breakup_values.raw.subtotal }}\nTotal: {{ payload.payload.cart.breakup_values.raw.total }}\nTotal Charge: {{ payload.payload.cart.breakup_values.raw.total_charge }}\nVOG: {{ payload.payload.cart.breakup_values.raw.vog }}\nYou Saved: {{ payload.payload.cart.breakup_values.raw.you_saved }}\n  </pre>\n</div>\n\n<div class=\"section\">\n  <div class=\"key\">Items:</div>\n  {% if payload.payload.cart.items.length == 0 %}\n    <div>No items</div>\n  {% else %}\n    <ul>\n      {% for item in payload.payload.cart.items %}\n        <li><pre>{{ item }}</pre></li>\n      {% endfor %}\n    </ul>\n  {% endif %}\n</div>\n\n</body>\n</html>\n",
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.boltic-email",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 81
+      },
+      "zIndex": 81,
+      "position": {
+        "x": 24,
+        "y": 212
+      },
+      "activity_data": {
+        "id": "0298c010-f33c-4535-8a2c-227673b311fc",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "fyndPlatformWebhook1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "function3",
+          "name": "function1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    },
+    {
+      "id": "function3",
+      "data": {
+        "name": "store_prev_state",
+        "type": "functionActivity",
+        "properties": {
+          "func": "return { hello: \"world\" }",
+          "language": "javascript",
+          "input_data": {},
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.function",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "",
+          "setup_and_configure": "default"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 91
+      },
+      "zIndex": 91,
+      "position": {
+        "x": 24,
+        "y": 400
+      },
+      "activity_data": {
+        "id": "4ecbff24-5f1f-4cc2-bd86-aa2263584235",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "bolticEmail1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "sleep2",
+          "name": "sleep2"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    },
+    {
+      "id": "sleep2",
+      "data": {
+        "name": "wait_for_use_action",
+        "type": "sleep",
+        "properties": {
+          "timeout": 6000000,
+          "integration_slug": "blt-int.sleep"
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 163
+      },
+      "zIndex": 163,
+      "position": {
+        "x": 24,
+        "y": 572.167309795224
+      },
+      "activity_data": {
+        "id": "d38ab21f-4e41-4bdb-9de3-bb08123f6214",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "function3"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "fyndPlatformApplication2",
+          "name": "fyndPlatformApplication2"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    },
+    {
+      "id": "fyndPlatformApplication2",
+      "data": {
+        "name": "second_fetch",
+        "type": "applicationFdkActivity",
+        "properties": {
+          "b": "true",
+          "c": "true",
+          "i": "true",
+          "id": "{{payload.payload.cart.id}}",
+          "secret": "",
+          "resource": "cart",
+          "operation": "cart.getCart",
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "activity_name": "fynd_platform_application",
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.fynd-platform-application",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 162
+      },
+      "zIndex": 162,
+      "position": {
+        "x": 24,
+        "y": 731.3806003319951
+      },
+      "activity_data": {
+        "id": "c4d7aa98-e426-4e67-9149-3c1a033951de",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "sleep2"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "function1",
+          "name": "function1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    },
+    {
+      "id": "ifElse1",
+      "data": {
+        "name": "still_not_yet_purchased",
+        "type": "ifActivity",
+        "properties": {
+          "branches": [
+            {
+              "ref": "if",
+              "operators": [],
+              "conditions": [
+                {
+                  "data": "{{global_variables.cart_value_threshold}}",
+                  "fact": "{{second_fetch.result.breakup_values.raw.total}}",
+                  "operator": ">="
+                }
+              ],
+              "operator_visible": []
+            },
+            {
+              "ref": "else"
+            }
+          ],
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.if-else"
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "condition",
+      "style": {
+        "zIndex": 159
+      },
+      "zIndex": 159,
+      "options": {
+        "conditions": []
+      },
+      "position": {
+        "x": 25.01570327116184,
+        "y": 992.1979870466481
+      },
+      "activity_data": {
+        "id": "27be6169-14d2-48fc-b6e8-7ac5e89aca34",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "function1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "api1",
+          "ref": "if",
+          "name": "post_to_backend"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    },
+    {
+      "id": "function1",
+      "data": {
+        "name": "function1",
+        "type": "functionActivity",
+        "properties": {
+          "func": "return { hello: \"world\" }",
+          "language": "javascript",
+          "input_data": {},
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.function",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "",
+          "setup_and_configure": "default"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 161
+      },
+      "zIndex": 161,
+      "position": {
+        "x": 26.472068918645675,
+        "y": 884.3297143110501
+      },
+      "activity_data": {
+        "id": "4ecbff24-5f1f-4cc2-bd86-aa2263584235",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "fyndPlatformApplication2"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "ifElse1",
+          "name": "still_not_yet_purchased"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_5",
+      "data": {
+        "isStraight": false
+      },
+      "type": "smooth",
+      "source": "function2",
+      "target": "bolticSms1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_6",
+      "data": {
+        "isStraight": false
+      },
+      "type": "smooth",
+      "source": "bolticSms1",
+      "target": "bolticTables1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_7",
+      "data": {
+        "isStraight": false
+      },
+      "type": "smooth",
+      "source": "fyndPlatformWebhook1",
+      "target": "bolticEmail1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_8",
+      "data": {
+        "isStraight": false
+      },
+      "type": "smooth",
+      "source": "bolticEmail1",
+      "target": "function3",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_9",
+      "data": {
+        "isStraight": false
+      },
+      "type": "smooth",
+      "source": "function3",
+      "target": "sleep2",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_10",
+      "data": {
+        "isStraight": false
+      },
+      "type": "smooth",
+      "source": "sleep2",
+      "target": "fyndPlatformApplication2",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_16",
+      "data": {
+        "isStraight": false
+      },
+      "type": "smooth",
+      "source": "api1",
+      "target": "function2",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "success",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_17",
+      "type": "smooth",
+      "source": "fyndPlatformApplication2",
+      "target": "function1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_18",
+      "type": "smooth",
+      "source": "function1",
+      "target": "ifElse1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "source": "ifElse1",
+      "sourceHandle": "if",
+      "target": "api1",
+      "targetHandle": "targetHandle",
+      "type": "smooth",
+      "id": "edge_19",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#A8A8A8"
+      }
+    }
+  ]
+}

@@ -1,0 +1,401 @@
+{
+  "meta": {},
+  "name": "Make Coupon",
+  "description": "",
+  "active": true,
+  "version": "0.0.0",
+  "status": "draft",
+  "source": "boltic",
+  "parent_id": "",
+  "global_variables": {
+    "EXPIRY_DAYS": 10,
+    "USER_SPECIFICITY": true
+  },
+  "retry_config": {
+    "initial_interval": 1000,
+    "maximum_attempts": 1,
+    "maximum_interval": 100000,
+    "backoff_coefficient": 2
+  },
+  "nodes": [
+    {
+      "id": "http1",
+      "data": {
+        "name": "HTTP",
+        "type": "http",
+        "properties": {
+          "secret": "",
+          "headers": {},
+          "methods": [
+            "POST"
+          ],
+          "endpoint": "",
+          "auth_type": "auth",
+          "query_params": {},
+          "state_params": {},
+          "test_payload": {},
+          "integration_slug": "blt-int.http"
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "default",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "trigger",
+      "style": {
+        "zIndex": 50
+      },
+      "zIndex": 50,
+      "position": {
+        "x": 36.51887360911428,
+        "y": 220.66487170980616
+      },
+      "activity_data": {
+        "id": "6785743b-f934-4111-a619-bea2e0c7efc5",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [],
+      "outgoingPorts": [
+        {
+          "id": "function1",
+          "name": "function1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "function1",
+      "data": {
+        "name": "check_validity",
+        "type": "functionActivity",
+        "properties": {
+          "func": "return { hello: \"world\" }",
+          "language": "javascript",
+          "input_data": {},
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.function",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "",
+          "setup_and_configure": "default"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 52
+      },
+      "zIndex": 52,
+      "position": {
+        "x": 343.6631779152018,
+        "y": 300.8035462535898
+      },
+      "activity_data": {
+        "id": "4ecbff24-5f1f-4cc2-bd86-aa2263584235",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "http1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "bolticTables1",
+          "name": "bolticTables1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "bolticSms1",
+      "data": {
+        "name": "successfull_sms",
+        "type": "customActivity",
+        "properties": {
+          "to": "+91 99999 99999",
+          "body": "{{make_personalized_message.result.message}}",
+          "code": "+91",
+          "secret": "_BOLTIC_INTEGRATION_BOLTIC_SMS",
+          "resource": "message",
+          "operation": "message.sendmessage",
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "activity_name": "Boltic_SMS",
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.boltic-sms",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 46
+      },
+      "zIndex": 46,
+      "position": {
+        "x": 1009.1386650795723,
+        "y": 318.4479036035482
+      },
+      "activity_data": {
+        "id": "dba461f9-307f-4efa-b22d-c857345223f6",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "function2"
+      ],
+      "outgoingPorts": [],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "function2",
+      "data": {
+        "name": "make_personalized_message",
+        "type": "functionActivity",
+        "properties": {
+          "func": "return { message: \"Hello, World!\" }",
+          "language": "javascript",
+          "input_data": {},
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.function",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 45
+      },
+      "zIndex": 45,
+      "position": {
+        "x": 1008.2881403636079,
+        "y": 205.24725508794438
+      },
+      "activity_data": {
+        "id": "4ecbff24-5f1f-4cc2-bd86-aa2263584235",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "fyndPlatform2"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "bolticSms1",
+          "name": "successfull_sms"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "bolticTables1",
+      "data": {
+        "name": "bolticTables1",
+        "type": "bolticTableActivity",
+        "properties": {
+          "page": 1,
+          "event": "list_record",
+          "limit": 1,
+          "table": "",
+          "filters": [],
+          "payload": {},
+          "updates": [],
+          "database": "",
+          "tabIndex": 0,
+          "connector": "boltic",
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.boltic-tables",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "default",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 53
+      },
+      "zIndex": 53,
+      "position": {
+        "x": 342.39634535169495,
+        "y": 188.48880607321146
+      },
+      "activity_data": {
+        "id": "ab2bb606-a075-461c-83f2-be839f43c2e7",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "function1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "fyndPlatform2",
+          "name": "create_coupon"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "fyndPlatform2",
+      "data": {
+        "name": "create_coupon",
+        "type": "platformFdkActivity",
+        "properties": {
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "activity_name": "fynd_platform",
+          "integration_slug": "blt-int.fynd-platform"
+        },
+        "blt_node_states": {
+          "node": "not-configured-yet",
+          "test": "",
+          "setup_and_configure": "default"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 47
+      },
+      "zIndex": 47,
+      "position": {
+        "x": 678.3414353271949,
+        "y": 246.04918775567353
+      },
+      "activity_data": {
+        "id": "4543d0da-859f-4ace-bcbd-22a432f8bd5d",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "bolticTables1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "function2",
+          "name": "make_personalized_message"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "type": "smooth",
+      "source": "http1",
+      "target": "function1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_4",
+      "type": "smooth",
+      "source": "function2",
+      "target": "bolticSms1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_5",
+      "type": "smooth",
+      "source": "function1",
+      "target": "bolticTables1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_6",
+      "type": "smooth",
+      "source": "bolticTables1",
+      "target": "fyndPlatform2",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_7",
+      "type": "smooth",
+      "source": "fyndPlatform2",
+      "target": "function2",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    }
+  ]
+}

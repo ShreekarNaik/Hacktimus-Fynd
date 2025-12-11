@@ -1,0 +1,33 @@
+graph TD
+    subgraph Client [Browser / Storefront]
+        User((User))
+        Store[Fynd Store Page]
+        Script[Injected loader.js]
+        IFrame[Game Popup IFrame]
+    end
+
+    subgraph Server [Backend Infrastructure]
+        API[Node.js Backend]
+        Boltic[(Boltic Tables)]
+        FyndAPI[Fynd Platform API]
+    end
+
+    User -- "Browses & Adds to Cart" --> Store
+    User -- "Moves mouse to exit" --> Store
+    Store -- "Event: mouseleave" --> Script
+    Script -- "Check: Cart > 0" --> Script
+    Script -- "Infers User Context" --> Script
+    Script -- "Opens IFrame" --> IFrame
+    
+    IFrame -- "Auto-Login (Props)" --> API
+    API -- "Create/Fetch User" --> Boltic
+    API -- "Return Session Token" --> IFrame
+    
+    User -- "Plays Game" --> IFrame
+    IFrame -- "Submit Score" --> API
+    API -- "Calc Reward" --> API
+    API -- "Create Coupon" --> FyndAPI
+    FyndAPI -- "Coupon Code" --> API
+    API -- "Save Reward" --> Boltic
+    API -- "Return Code" --> IFrame
+    IFrame -- "Show Coupon" --> User

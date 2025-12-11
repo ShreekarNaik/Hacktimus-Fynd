@@ -1,0 +1,147 @@
+{
+  "meta": {},
+  "name": "CreateUserinDB",
+  "description": "",
+  "active": true,
+  "version": "0.0.0",
+  "status": "draft",
+  "source": "boltic",
+  "parent_id": "",
+  "global_variables": {},
+  "retry_config": {
+    "initial_interval": 1000,
+    "maximum_attempts": 1,
+    "maximum_interval": 100000,
+    "backoff_coefficient": 2
+  },
+  "nodes": [
+    {
+      "id": "fyndPlatformWebhook1",
+      "data": {
+        "name": "Fynd Platform Webhook",
+        "type": "fp_webhook",
+        "properties": {
+          "version": "1",
+          "event_id": [
+            2204
+          ],
+          "auth_meta": {},
+          "fp_auth_id": "",
+          "event_details": {
+            "event_name": "user",
+            "event_type": "create",
+            "event_category": "application"
+          },
+          "application_id": [
+            "6936cfcb5528738f3bdab871"
+          ],
+          "custom_headers": {},
+          "integration_slug": "blt-int.fynd-platform-webhook"
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "trigger",
+      "style": {
+        "zIndex": 22
+      },
+      "zIndex": 22,
+      "position": {
+        "x": 239.71934536317372,
+        "y": 290.21732035096517
+      },
+      "activity_data": {
+        "id": "2b1e13b3-3a2a-4af5-ae8f-2a092d2d104b",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [],
+      "outgoingPorts": [
+        {
+          "id": "bolticTables1",
+          "name": "bolticTables1"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    },
+    {
+      "id": "bolticTables1",
+      "data": {
+        "name": "bolticTables1",
+        "type": "bolticTableActivity",
+        "properties": {
+          "event": "create_record",
+          "table": "",
+          "filters": [],
+          "payload": {
+            "email": "{{payload.payload[0].user.emails[0].email}}",
+            "user_id": "{{payload.payload[0].user.userId}}",
+            "company_id": "{{payload.company_id}}",
+            "mobile_number": "{{payload.payload[0].user.phoneNumbers[0].countryCode}}{{payload.payload[0].user.phoneNumbers[0].phone}}",
+            "application_id": "{{payload.application_id[0]}}"
+          },
+          "updates": [],
+          "database": "",
+          "tabIndex": 0,
+          "connector": "boltic",
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.boltic-tables",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        }
+      },
+      "type": "normal",
+      "style": {
+        "zIndex": 24
+      },
+      "zIndex": 24,
+      "position": {
+        "x": 554.4911003600281,
+        "y": 296.86114191598676
+      },
+      "activity_data": {
+        "id": "ab2bb606-a075-461c-83f2-be839f43c2e7",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "fyndPlatformWebhook1"
+      ],
+      "outgoingPorts": [],
+      "measured": {
+        "width": 260,
+        "height": 84
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "type": "smooth",
+      "source": "fyndPlatformWebhook1",
+      "target": "bolticTables1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    }
+  ]
+}

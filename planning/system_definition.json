@@ -1,0 +1,70 @@
+{
+  "system": {
+    "name": "FyndGames Exit Intent System",
+    "version": "1.0.0-hackathon",
+    "description": "Single-tenant gamification popup triggered by exit intent on cart abandonment."
+  },
+  "components": [
+    {
+      "id": "storefront_script",
+      "name": "Storefront Injector Script",
+      "type": "Client-Side Script",
+      "responsibility": "Detect exit intent, check cart, open game iframe.",
+      "location": "Manual injection into Store Theme (Option 1A)",
+      "logic": "IF (mouse_leave AND user_has_cart AND !game_played_session) THEN open_iframe(frontend_url + '?mode=popup&context=' + user_context)"
+    },
+    {
+      "id": "frontend_app",
+      "name": "Game Frontend",
+      "type": "React Application",
+      "location": "/frontend",
+      "responsibility": "Render game, handle gameplay, display reward.",
+      "modifications": [
+        "Add 'Popup Mode' (hide nav/sidebar).",
+        "Parse 'user_context' from URL query params.",
+        "Auto-login/create mock user based on context."
+      ]
+    },
+    {
+      "id": "backend_api",
+      "name": "Gamification Backend",
+      "type": "Node.js/Express API",
+      "location": "/backend",
+      "responsibility": "Manage sessions, issue rewards, log to Boltic.",
+      "endpoints": [
+        "POST /api/games/start (supports auto-create user)",
+        "POST /api/games/submit",
+        "POST /api/webhooks/fynd-cart (Legacy support)"
+      ]
+    },
+    {
+      "id": "boltic_integration",
+      "name": "Boltic Data Layer",
+      "type": "External Service",
+      "responsibility": "Persist users, sessions, and rewards.",
+      "tables": ["users", "game_sessions", "rewards"]
+    }
+  ],
+  "data_flows": [
+    {
+      "from": "storefront_script",
+      "to": "frontend_app",
+      "mechanism": "IFrame URL Params",
+      "data": "Cart ID, UserContext (Name/ID inferred from Store SDK)"
+    },
+    {
+      "from": "frontend_app",
+      "to": "backend_api",
+      "mechanism": "REST API",
+      "data": "Score, GameID, Auto-Auth Credentials"
+    },
+    {
+      "from": "backend_api",
+      "to": "boltic_integration",
+      "mechanism": "Boltic SDK",
+      "data": "Persistent Records"
+    }
+  ],
+  "user_identity_strategy": "Auto-Create",
+  "identity_logic": "Username = `guest_${timestamp}_${random}` OR derived from Store SDK context if available. Backend treats this as a valid user for the session."
+}
