@@ -8,5 +8,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "strict": false
-  }
+  },
+  "exclude": ["node_modules"]
 }
