@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../services/mock/db';
-import { boltic } from '../services/mock/boltic';
+import { boltic } from '../services/bolticService';
 import { fynd } from '../services/mock/fynd';
 import { GameSession, User } from '../models/types';
 

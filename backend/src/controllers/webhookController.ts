@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../services/mock/db';
-import { boltic } from '../services/mock/boltic';
+import { boltic } from '../services/bolticService';
 
 // This endpoint simulates Fynd calling OUR webhook when a cart is created/updated
 export const handleCartWebhook = async (req: Request, res: Response) => {
