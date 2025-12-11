@@ -37,35 +37,39 @@
               "ref": "failure"
             }
           ],
-          "endpoint": "localhost:3000",
+          "endpoint": "{{global_variables.BACKEND_BASE_URL}}/abandoned_cart",
           "body_type": "none",
           "api_timeout": 30000,
-          "query_params": {},
+          "query_params": {
+            "user_id": "{{second_fetch.result.customer_id}}"
+          },
           "retry_config": {
             "initial_interval": 1000,
             "maximum_attempts": 1,
             "maximum_interval": 100000,
             "backoff_coefficient": 2
           },
-          "state_params": {},
+          "state_params": {
+            "cart_json_data": "{{payload.payload.cart}}"
+          },
           "maximum_timeout": 60000,
           "integration_slug": "blt-int.api",
           "continue_on_failure": true
         },
         "blt_node_states": {
-          "node": "not-configured-yet",
-          "test": "default",
+          "node": "skipped",
+          "test": "skipped",
           "setup_and_configure": "completed"
         }
       },
       "type": "condition",
       "style": {
-        "zIndex": 164
+        "zIndex": 197
       },
-      "zIndex": 164,
+      "zIndex": 197,
       "position": {
-        "x": -128,
-        "y": 1366
+        "x": -143.81593793247197,
+        "y": 1099.3360193843246
       },
       "activity_data": {
         "id": "6cc1d090-334c-4377-a638-8777c48a1d07",
@@ -91,33 +95,14 @@
     },
     {
       "id": "bolticSms1",
-      "data": {
-        "name": "bolticSms1",
-        "type": "customActivity",
-        "properties": {
-          "retry_config": {
-            "initial_interval": 1000,
-            "maximum_attempts": 1,
-            "maximum_interval": 100000,
-            "backoff_coefficient": 2
-          },
-          "activity_name": "Boltic_SMS",
-          "integration_slug": "blt-int.boltic-sms"
-        },
-        "blt_node_states": {
-          "node": "not-configured-yet",
-          "test": "",
-          "setup_and_configure": "default"
-        }
-      },
       "type": "normal",
       "style": {
-        "zIndex": 155
+        "zIndex": 204
       },
-      "zIndex": 155,
+      "zIndex": 204,
       "position": {
-        "x": -118,
-        "y": 1876
+        "x": -189.71637414105598,
+        "y": 1377.8944038873385
       },
       "activity_data": {
         "id": "dba461f9-307f-4efa-b22d-c857345223f6",
@@ -130,14 +115,42 @@
       "outgoingPorts": [
         {
           "id": "bolticTables1",
-          "name": "bolticTables1"
+          "name": "add_to_card_abandonment_table"
         }
       ],
       "measured": {
         "width": 260,
         "height": 84
       },
-      "selected": false
+      "selected": false,
+      "data": {
+        "type": "customActivity",
+        "name": "bolticSms1",
+        "properties": {
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "activity_name": "Boltic_SMS",
+          "integration_slug": "blt-int.boltic-sms",
+          "secret": "_BOLTIC_INTEGRATION_BOLTIC_SMS",
+          "resource": "message",
+          "operation": "message.sendmessage",
+          "code": "+91",
+          "to": "{{getnumber.result.data.mobile_no}}",
+          "body": "{{generate_sms_content.result.message}}",
+          "continue_on_failure": false,
+          "maximum_timeout": 60000
+        },
+        "blt_node_states": {
+          "node": "skipped",
+          "test": "skipped",
+          "setup_and_configure": "completed"
+        }
+      },
+      "dragging": false
     },
     {
       "id": "function2",
@@ -145,7 +158,7 @@
         "name": "generate_sms_content",
         "type": "functionActivity",
         "properties": {
-          "func": "return { hello: \"world\" }",
+          "func": "return { message: \"Hey, seems like you left off your shopping midway, here is a strategic game that you can play and get exclusive discount : \"+ post_to_backend.result.url}",
           "language": "javascript",
           "input_data": {},
           "retry_config": {
@@ -159,19 +172,19 @@
           "continue_on_failure": false
         },
         "blt_node_states": {
-          "node": "not-configured-yet",
-          "test": "",
-          "setup_and_configure": "default"
+          "node": "skipped",
+          "test": "skipped",
+          "setup_and_configure": "completed"
         }
       },
       "type": "normal",
       "style": {
-        "zIndex": 154
+        "zIndex": 198
       },
-      "zIndex": 154,
+      "zIndex": 198,
       "position": {
-        "x": -170,
-        "y": 1688
+        "x": -197.88453098658718,
+        "y": 1222.7088495971686
       },
       "activity_data": {
         "id": "4ecbff24-5f1f-4cc2-bd86-aa2263584235",
@@ -191,10 +204,34 @@
         "width": 260,
         "height": 84
       },
-      "selected": false
+      "selected": false,
+      "dragging": false
     },
     {
       "id": "bolticTables1",
+      "type": "normal",
+      "style": {
+        "zIndex": 205
+      },
+      "zIndex": 205,
+      "position": {
+        "x": -202.76297969476758,
+        "y": 1561.0942382967162
+      },
+      "activity_data": {
+        "id": "ab2bb606-a075-461c-83f2-be839f43c2e7",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "bolticSms1"
+      ],
+      "outgoingPorts": [],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false,
       "data": {
         "name": "add_to_card_abandonment_table",
         "type": "bolticTableActivity",
@@ -202,7 +239,14 @@
           "event": "create_record",
           "table": "",
           "filters": [],
-          "payload": {},
+          "payload": {
+            "cart_id": "{{second_fetch.result.cart_id}}",
+            "user_id": "{{second_fetch.result.customer_id}}",
+            "items": "{{payload.payload.cart}}",
+            "cart_value": "{{second_fetch.result.breakup_values.raw.total}}",
+            "game_link": "{{post_to_backend.result.url}}",
+            "notification_sent": true
+          },
           "updates": [],
           "database": "",
           "tabIndex": 0,
@@ -218,34 +262,12 @@
           "continue_on_failure": false
         },
         "blt_node_states": {
-          "node": "not-configured-yet",
-          "test": "default",
+          "node": "skipped",
+          "test": "skipped",
           "setup_and_configure": "completed"
         }
       },
-      "type": "normal",
-      "style": {
-        "zIndex": 156
-      },
-      "zIndex": 156,
-      "position": {
-        "x": -130,
-        "y": 2090
-      },
-      "activity_data": {
-        "id": "ab2bb606-a075-461c-83f2-be839f43c2e7",
-        "status": "published",
-        "properties": {}
-      },
-      "incomingPorts": [
-        "bolticSms1"
-      ],
-      "outgoingPorts": [],
-      "measured": {
-        "width": 260,
-        "height": 84
-      },
-      "selected": false
+      "dragging": false
     },
     {
       "id": "fyndPlatformWebhook1",
@@ -512,8 +534,8 @@
       ],
       "outgoingPorts": [
         {
-          "id": "function1",
-          "name": "function1"
+          "id": "bolticTables2",
+          "name": "bolticTables1"
         }
       ],
       "measured": {
@@ -523,7 +545,159 @@
       "selected": false
     },
     {
+      "id": "bolticTables2",
+      "type": "normal",
+      "style": {
+        "zIndex": 203
+      },
+      "zIndex": 203,
+      "position": {
+        "x": 30.674856051215926,
+        "y": 856.5595624542694
+      },
+      "activity_data": {
+        "id": "ab2bb606-a075-461c-83f2-be839f43c2e7",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "fyndPlatformApplication2"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "ifElse1",
+          "name": "still_not_yet_purchased"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false,
+      "dragging": false,
+      "data": {
+        "name": "getnumber",
+        "type": "bolticTableActivity",
+        "properties": {
+          "query": "SELECT mobile_number\nFROM \"User Contact Mapping\"\nWHERE user_id = '{{second_fetch.result.customer_id}}';",
+          "database": "",
+          "tabIndex": 1,
+          "connector": "boltic",
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.boltic-tables",
+          "continue_on_failure": false,
+          "event": "sql_query"
+        },
+        "blt_node_states": {
+          "node": "completed",
+          "test": "completed",
+          "setup_and_configure": "completed"
+        },
+        "activity_comment": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "id": "bolticSms2",
+      "position": {
+        "x": 175.20819409937303,
+        "y": 1119.7066774523664
+      },
+      "type": "normal",
+      "data": {
+        "type": "customActivity",
+        "name": "bolticSms2",
+        "properties": {
+          "integration_slug": "blt-int.boltic-sms",
+          "activity_name": "Boltic_SMS",
+          "retry_config": {
+            "maximum_attempts": 1,
+            "backoff_coefficient": 2,
+            "initial_interval": 1000,
+            "maximum_interval": 100000
+          },
+          "secret": "_BOLTIC_INTEGRATION_BOLTIC_SMS",
+          "resource": "message",
+          "operation": "message.sendmessage",
+          "code": "+91",
+          "to": "{{getnumber.result.data.mobile_no}}",
+          "body": "Thank you for your purchase. You can log on to Fynd Games ( fyndgames.com ) and compete on strategic & luck based games and win exclusive discounts",
+          "continue_on_failure": false,
+          "maximum_timeout": 60000
+        },
+        "blt_node_states": {
+          "node": "skipped",
+          "setup_and_configure": "completed",
+          "test": "skipped"
+        }
+      },
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "activity_data": {
+        "id": "dba461f9-307f-4efa-b22d-c857345223f6",
+        "properties": {},
+        "status": "published"
+      },
+      "incomingPorts": [
+        "ifElse1"
+      ],
+      "outgoingPorts": [],
+      "selected": false,
+      "zIndex": 195,
+      "style": {
+        "zIndex": 195
+      },
+      "dragging": false
+    },
+    {
       "id": "ifElse1",
+      "type": "condition",
+      "style": {
+        "zIndex": 201
+      },
+      "zIndex": 201,
+      "options": {
+        "conditions": []
+      },
+      "position": {
+        "x": 29.884907237774343,
+        "y": 979.6664915654275
+      },
+      "activity_data": {
+        "id": "27be6169-14d2-48fc-b6e8-7ac5e89aca34",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "bolticTables2"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "api1",
+          "ref": "if",
+          "name": "post_to_backend"
+        },
+        {
+          "id": "bolticSms2",
+          "ref": "else",
+          "name": "bolticSms2"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": false,
+      "dragging": false,
       "data": {
         "name": "still_not_yet_purchased",
         "type": "ifActivity",
@@ -559,126 +733,10 @@
           "test": "completed",
           "setup_and_configure": "completed"
         }
-      },
-      "type": "condition",
-      "style": {
-        "zIndex": 159
-      },
-      "zIndex": 159,
-      "options": {
-        "conditions": []
-      },
-      "position": {
-        "x": 25.01570327116184,
-        "y": 992.1979870466481
-      },
-      "activity_data": {
-        "id": "27be6169-14d2-48fc-b6e8-7ac5e89aca34",
-        "status": "published",
-        "properties": {}
-      },
-      "incomingPorts": [
-        "function1"
-      ],
-      "outgoingPorts": [
-        {
-          "id": "api1",
-          "ref": "if",
-          "name": "post_to_backend"
-        }
-      ],
-      "measured": {
-        "width": 260,
-        "height": 84
-      },
-      "selected": false
-    },
-    {
-      "id": "function1",
-      "data": {
-        "name": "function1",
-        "type": "functionActivity",
-        "properties": {
-          "func": "return { hello: \"world\" }",
-          "language": "javascript",
-          "input_data": {},
-          "retry_config": {
-            "initial_interval": 1000,
-            "maximum_attempts": 1,
-            "maximum_interval": 100000,
-            "backoff_coefficient": 2
-          },
-          "maximum_timeout": 60000,
-          "integration_slug": "blt-int.function",
-          "continue_on_failure": false
-        },
-        "blt_node_states": {
-          "node": "not-configured-yet",
-          "test": "",
-          "setup_and_configure": "default"
-        }
-      },
-      "type": "normal",
-      "style": {
-        "zIndex": 161
-      },
-      "zIndex": 161,
-      "position": {
-        "x": 26.472068918645675,
-        "y": 884.3297143110501
-      },
-      "activity_data": {
-        "id": "4ecbff24-5f1f-4cc2-bd86-aa2263584235",
-        "status": "published",
-        "properties": {}
-      },
-      "incomingPorts": [
-        "fyndPlatformApplication2"
-      ],
-      "outgoingPorts": [
-        {
-          "id": "ifElse1",
-          "name": "still_not_yet_purchased"
-        }
-      ],
-      "measured": {
-        "width": 260,
-        "height": 84
-      },
-      "selected": false
+      }
     }
   ],
   "edges": [
-    {
-      "id": "edge_5",
-      "data": {
-        "isStraight": false
-      },
-      "type": "smooth",
-      "source": "function2",
-      "target": "bolticSms1",
-      "markerEnd": {
-        "type": "arrowclosed",
-        "color": "#a8a8a8"
-      },
-      "sourceHandle": "outHandle",
-      "targetHandle": "targetHandle"
-    },
-    {
-      "id": "edge_6",
-      "data": {
-        "isStraight": false
-      },
-      "type": "smooth",
-      "source": "bolticSms1",
-      "target": "bolticTables1",
-      "markerEnd": {
-        "type": "arrowclosed",
-        "color": "#a8a8a8"
-      },
-      "sourceHandle": "outHandle",
-      "targetHandle": "targetHandle"
-    },
     {
       "id": "edge_7",
       "data": {
@@ -755,36 +813,72 @@
       "targetHandle": "targetHandle"
     },
     {
-      "id": "edge_17",
+      "id": "edge_19",
       "type": "smooth",
-      "source": "fyndPlatformApplication2",
-      "target": "function1",
+      "source": "ifElse1",
+      "target": "api1",
       "markerEnd": {
         "type": "arrowclosed",
         "color": "#a8a8a8"
       },
-      "sourceHandle": "outHandle",
-      "targetHandle": "targetHandle"
-    },
-    {
-      "id": "edge_18",
-      "type": "smooth",
-      "source": "function1",
-      "target": "ifElse1",
-      "markerEnd": {
-        "type": "arrowclosed",
-        "color": "#a8a8a8"
-      },
-      "sourceHandle": "outHandle",
+      "sourceHandle": "if",
       "targetHandle": "targetHandle"
     },
     {
       "source": "ifElse1",
-      "sourceHandle": "if",
-      "target": "api1",
+      "sourceHandle": "else",
+      "target": "bolticSms2",
       "targetHandle": "targetHandle",
       "type": "smooth",
-      "id": "edge_19",
+      "id": "edge_23",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#C41C1C"
+      }
+    },
+    {
+      "source": "fyndPlatformApplication2",
+      "sourceHandle": "outHandle",
+      "target": "bolticTables2",
+      "targetHandle": "targetHandle",
+      "type": "smooth",
+      "id": "edge_24",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#A8A8A8"
+      }
+    },
+    {
+      "source": "bolticTables2",
+      "sourceHandle": "outHandle",
+      "target": "ifElse1",
+      "targetHandle": "targetHandle",
+      "type": "smooth",
+      "id": "edge_25",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#A8A8A8"
+      }
+    },
+    {
+      "source": "function2",
+      "sourceHandle": "outHandle",
+      "target": "bolticSms1",
+      "targetHandle": "targetHandle",
+      "type": "smooth",
+      "id": "edge_26",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#A8A8A8"
+      }
+    },
+    {
+      "source": "bolticSms1",
+      "sourceHandle": "outHandle",
+      "target": "bolticTables1",
+      "targetHandle": "targetHandle",
+      "type": "smooth",
+      "id": "edge_27",
       "markerEnd": {
         "type": "arrowclosed",
         "color": "#A8A8A8"

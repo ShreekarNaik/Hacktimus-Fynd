@@ -8,8 +8,13 @@
   "source": "boltic",
   "parent_id": "",
   "global_variables": {
+    "body": {},
+    "user_id": "temp_user_id",
+    "mobile_no": 1324123412342,
     "EXPIRY_DAYS": 10,
-    "USER_SPECIFICITY": true
+    "coupon_code": "coupon_code",
+    "USER_SPECIFICITY": true,
+    "authorization_token": "oa-4008d4b493df2c0f792d5271fe6c553d5719e8c4"
   },
   "retry_config": {
     "initial_interval": 1000,
@@ -24,32 +29,36 @@
         "name": "HTTP",
         "type": "http",
         "properties": {
-          "secret": "",
           "headers": {},
           "methods": [
             "POST"
           ],
           "endpoint": "",
-          "auth_type": "auth",
-          "query_params": {},
-          "state_params": {},
+          "auth_type": "none",
+          "query_params": {
+            "coupon_code": "{{global_variables.coupon_code}}"
+          },
+          "state_params": {
+            "user_id": "{{global_variables.user_id}}",
+            "coupon_params": "{{global_variables.body}}"
+          },
           "test_payload": {},
           "integration_slug": "blt-int.http"
         },
         "blt_node_states": {
-          "node": "not-configured-yet",
-          "test": "default",
+          "node": "completed",
+          "test": "completed",
           "setup_and_configure": "completed"
         }
       },
       "type": "trigger",
       "style": {
-        "zIndex": 50
+        "zIndex": 84
       },
-      "zIndex": 50,
+      "zIndex": 84,
       "position": {
-        "x": 36.51887360911428,
-        "y": 220.66487170980616
+        "x": -364.357171124999,
+        "y": 91.8056720755201
       },
       "activity_data": {
         "id": "6785743b-f934-4111-a619-bea2e0c7efc5",
@@ -59,67 +68,16 @@
       "incomingPorts": [],
       "outgoingPorts": [
         {
-          "id": "function1",
-          "name": "function1"
+          "id": "fyndPlatform1",
+          "name": "fyndPlatform1"
         }
       ],
       "measured": {
         "width": 260,
         "height": 84
-      }
-    },
-    {
-      "id": "function1",
-      "data": {
-        "name": "check_validity",
-        "type": "functionActivity",
-        "properties": {
-          "func": "return { hello: \"world\" }",
-          "language": "javascript",
-          "input_data": {},
-          "retry_config": {
-            "initial_interval": 1000,
-            "maximum_attempts": 1,
-            "maximum_interval": 100000,
-            "backoff_coefficient": 2
-          },
-          "maximum_timeout": 60000,
-          "integration_slug": "blt-int.function",
-          "continue_on_failure": false
-        },
-        "blt_node_states": {
-          "node": "not-configured-yet",
-          "test": "",
-          "setup_and_configure": "default"
-        }
       },
-      "type": "normal",
-      "style": {
-        "zIndex": 52
-      },
-      "zIndex": 52,
-      "position": {
-        "x": 343.6631779152018,
-        "y": 300.8035462535898
-      },
-      "activity_data": {
-        "id": "4ecbff24-5f1f-4cc2-bd86-aa2263584235",
-        "status": "published",
-        "properties": {}
-      },
-      "incomingPorts": [
-        "http1"
-      ],
-      "outgoingPorts": [
-        {
-          "id": "bolticTables1",
-          "name": "bolticTables1"
-        }
-      ],
-      "measured": {
-        "width": 260,
-        "height": 84
-      }
+      "selected": false,
+      "dragging": false
     },
     {
       "id": "bolticSms1",
@@ -127,7 +85,7 @@
         "name": "successfull_sms",
         "type": "customActivity",
         "properties": {
-          "to": "+91 99999 99999",
+          "to": "{{getMobileNumber.result.data.mobile_no}}",
           "body": "{{make_personalized_message.result.message}}",
           "code": "+91",
           "secret": "_BOLTIC_INTEGRATION_BOLTIC_SMS",
@@ -152,12 +110,12 @@
       },
       "type": "normal",
       "style": {
-        "zIndex": 46
+        "zIndex": 81
       },
-      "zIndex": 46,
+      "zIndex": 81,
       "position": {
-        "x": 1009.1386650795723,
-        "y": 318.4479036035482
+        "x": 1149.153207436176,
+        "y": 100.41066639851422
       },
       "activity_data": {
         "id": "dba461f9-307f-4efa-b22d-c857345223f6",
@@ -165,13 +123,14 @@
         "properties": {}
       },
       "incomingPorts": [
-        "function2"
+        "bolticTables1"
       ],
       "outgoingPorts": [],
       "measured": {
         "width": 260,
         "height": 84
-      }
+      },
+      "selected": false
     },
     {
       "id": "function2",
@@ -179,7 +138,7 @@
         "name": "make_personalized_message",
         "type": "functionActivity",
         "properties": {
-          "func": "return { message: \"Hello, World!\" }",
+          "func": "return { message: \"You just got an exclusive personalized coupon : \"+http.query_params.coupon_code}",
           "language": "javascript",
           "input_data": {},
           "retry_config": {
@@ -200,12 +159,12 @@
       },
       "type": "normal",
       "style": {
-        "zIndex": 45
+        "zIndex": 79
       },
-      "zIndex": 45,
+      "zIndex": 79,
       "position": {
-        "x": 1008.2881403636079,
-        "y": 205.24725508794438
+        "x": 740.1744878692765,
+        "y": 52.25466562978171
       },
       "activity_data": {
         "id": "4ecbff24-5f1f-4cc2-bd86-aa2263584235",
@@ -213,34 +172,93 @@
         "properties": {}
       },
       "incomingPorts": [
-        "fyndPlatform2"
+        "fyndPlatformApplication1"
       ],
       "outgoingPorts": [
         {
-          "id": "bolticSms1",
-          "name": "successfull_sms"
+          "id": "bolticTables1",
+          "name": "bolticTables1"
         }
       ],
       "measured": {
         "width": 260,
         "height": 84
-      }
+      },
+      "selected": false
+    },
+    {
+      "id": "fyndPlatformApplication1",
+      "type": "normal",
+      "style": {
+        "zIndex": 89
+      },
+      "zIndex": 89,
+      "position": {
+        "x": 372.81296327169264,
+        "y": 106.20674322510095
+      },
+      "activity_data": {
+        "id": "c4d7aa98-e426-4e67-9149-3c1a033951de",
+        "status": "published",
+        "properties": {}
+      },
+      "incomingPorts": [
+        "fyndPlatform1"
+      ],
+      "outgoingPorts": [
+        {
+          "id": "function2",
+          "name": "make_personalized_message"
+        }
+      ],
+      "measured": {
+        "width": 260,
+        "height": 84
+      },
+      "selected": true,
+      "data": {
+        "name": "fyndPlatformApplication1",
+        "type": "applicationFdkActivity",
+        "properties": {
+          "body": "{{http.state_params.coupon_params}}",
+          "method": "get",
+          "secret": "",
+          "headers": {
+            "Authorization": "Bearer {{global_variables.authorization_token}}"
+          },
+          "base_url": "https://api.fynd.com/service/platform/cart/v1.0/company/{company_id}/application/{application_id}/coupon",
+          "resource": "custom",
+          "operation": "custom.custom_api",
+          "query_params": {},
+          "retry_config": {
+            "initial_interval": 1000,
+            "maximum_attempts": 1,
+            "maximum_interval": 100000,
+            "backoff_coefficient": 2
+          },
+          "activity_name": "fynd_platform_application",
+          "maximum_timeout": 60000,
+          "integration_slug": "blt-int.fynd-platform-application",
+          "continue_on_failure": false
+        },
+        "blt_node_states": {
+          "node": "skipped",
+          "test": "skipped",
+          "setup_and_configure": "completed"
+        }
+      },
+      "dragging": false
     },
     {
       "id": "bolticTables1",
       "data": {
-        "name": "bolticTables1",
+        "name": "getMobileNumber",
         "type": "bolticTableActivity",
         "properties": {
-          "page": 1,
-          "event": "list_record",
-          "limit": 1,
-          "table": "",
-          "filters": [],
-          "payload": {},
-          "updates": [],
+          "event": "sql_query",
+          "query": "SELECT mobile_number\nFROM \"User Contact Mapping\"\nWHERE user_id = '{{http.state_params.user_id}}';",
           "database": "",
-          "tabIndex": 0,
+          "tabIndex": 1,
           "connector": "boltic",
           "retry_config": {
             "initial_interval": 1000,
@@ -253,19 +271,19 @@
           "continue_on_failure": false
         },
         "blt_node_states": {
-          "node": "not-configured-yet",
-          "test": "default",
+          "node": "skipped",
+          "test": "skipped",
           "setup_and_configure": "completed"
         }
       },
       "type": "normal",
       "style": {
-        "zIndex": 53
+        "zIndex": 80
       },
-      "zIndex": 53,
+      "zIndex": 80,
       "position": {
-        "x": 342.39634535169495,
-        "y": 188.48880607321146
+        "x": 745.0740168157735,
+        "y": 196.11343669253108
       },
       "activity_data": {
         "id": "ab2bb606-a075-461c-83f2-be839f43c2e7",
@@ -273,111 +291,85 @@
         "properties": {}
       },
       "incomingPorts": [
-        "function1"
+        "function2"
       ],
       "outgoingPorts": [
         {
-          "id": "fyndPlatform2",
-          "name": "create_coupon"
+          "id": "bolticSms1",
+          "name": "successfull_sms"
         }
       ],
       "measured": {
         "width": 260,
         "height": 84
-      }
+      },
+      "selected": false
     },
     {
-      "id": "fyndPlatform2",
-      "data": {
-        "name": "create_coupon",
-        "type": "platformFdkActivity",
-        "properties": {
-          "retry_config": {
-            "initial_interval": 1000,
-            "maximum_attempts": 1,
-            "maximum_interval": 100000,
-            "backoff_coefficient": 2
-          },
-          "activity_name": "fynd_platform",
-          "integration_slug": "blt-int.fynd-platform"
-        },
-        "blt_node_states": {
-          "node": "not-configured-yet",
-          "test": "",
-          "setup_and_configure": "default"
-        }
+      "id": "fyndPlatform1",
+      "position": {
+        "x": 1.4647800815940286,
+        "y": 91.835689939585
       },
       "type": "normal",
-      "style": {
-        "zIndex": 47
+      "data": {
+        "type": "platformFdkActivity",
+        "name": "fyndPlatform1",
+        "properties": {
+          "integration_slug": "blt-int.fynd-platform",
+          "activity_name": "fynd_platform",
+          "retry_config": {
+            "maximum_attempts": 1,
+            "backoff_coefficient": 2,
+            "initial_interval": 1000,
+            "maximum_interval": 100000
+          },
+          "secret": "",
+          "resource": "user",
+          "operation": "user.searchUsers",
+          "application_id": "6936cfcb5528738f3bdab871",
+          "q": "{{http.state_params.mobile_no}}",
+          "continue_on_failure": false,
+          "maximum_timeout": 60000
+        },
+        "blt_node_states": {
+          "node": "skipped",
+          "setup_and_configure": "completed",
+          "test": "skipped"
+        }
       },
-      "zIndex": 47,
-      "position": {
-        "x": 678.3414353271949,
-        "y": 246.04918775567353
+      "measured": {
+        "width": 260,
+        "height": 84
       },
       "activity_data": {
         "id": "4543d0da-859f-4ace-bcbd-22a432f8bd5d",
-        "status": "published",
-        "properties": {}
+        "properties": {},
+        "status": "published"
       },
       "incomingPorts": [
-        "bolticTables1"
+        "http1"
       ],
       "outgoingPorts": [
         {
-          "id": "function2",
-          "name": "make_personalized_message"
+          "id": "fyndPlatformApplication1",
+          "name": "fyndPlatformApplication1"
         }
       ],
-      "measured": {
-        "width": 260,
-        "height": 84
-      }
+      "selected": false,
+      "zIndex": 88,
+      "style": {
+        "zIndex": 88
+      },
+      "dragging": false
     }
   ],
   "edges": [
     {
-      "id": "edge_1",
-      "type": "smooth",
-      "source": "http1",
-      "target": "function1",
-      "markerEnd": {
-        "type": "arrowclosed",
-        "color": "#a8a8a8"
-      },
-      "sourceHandle": "outHandle",
-      "targetHandle": "targetHandle"
-    },
-    {
-      "id": "edge_4",
-      "type": "smooth",
-      "source": "function2",
-      "target": "bolticSms1",
-      "markerEnd": {
-        "type": "arrowclosed",
-        "color": "#a8a8a8"
-      },
-      "sourceHandle": "outHandle",
-      "targetHandle": "targetHandle"
-    },
-    {
-      "id": "edge_5",
-      "type": "smooth",
-      "source": "function1",
-      "target": "bolticTables1",
-      "markerEnd": {
-        "type": "arrowclosed",
-        "color": "#a8a8a8"
-      },
-      "sourceHandle": "outHandle",
-      "targetHandle": "targetHandle"
-    },
-    {
       "id": "edge_6",
       "type": "smooth",
-      "source": "bolticTables1",
-      "target": "fyndPlatform2",
+      "source": "fyndPlatformApplication1",
+      "target": "function2",
       "markerEnd": {
         "type": "arrowclosed",
         "color": "#a8a8a8"
@@ -388,14 +380,50 @@
     {
       "id": "edge_7",
       "type": "smooth",
-      "source": "fyndPlatform2",
-      "target": "function2",
+      "source": "function2",
+      "target": "bolticTables1",
       "markerEnd": {
         "type": "arrowclosed",
         "color": "#a8a8a8"
       },
       "sourceHandle": "outHandle",
       "targetHandle": "targetHandle"
+    },
+    {
+      "id": "edge_8",
+      "type": "smooth",
+      "source": "bolticTables1",
+      "target": "bolticSms1",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#a8a8a8"
+      },
+      "sourceHandle": "outHandle",
+      "targetHandle": "targetHandle"
+    },
+    {
+      "source": "http1",
+      "sourceHandle": "outHandle",
+      "target": "fyndPlatform1",
+      "targetHandle": "targetHandle",
+      "type": "smooth",
+      "id": "edge_9",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#A8A8A8"
+      }
+    },
+    {
+      "source": "fyndPlatform1",
+      "sourceHandle": "outHandle",
+      "target": "fyndPlatformApplication1",
+      "targetHandle": "targetHandle",
+      "type": "smooth",
+      "id": "edge_10",
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#A8A8A8"
+      }
     }
   ]
 }
