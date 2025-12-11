@@ -8,6 +8,9 @@ export interface User {
   totalWins: number;
   winsThisWeek: number;
   createdAt: number;
+  phoneNumber?: string;
+  preferredStores?: string[];
+  displayName?: string;
 }
 
 export interface GameSession {
