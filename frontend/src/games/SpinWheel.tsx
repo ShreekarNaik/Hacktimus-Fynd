@@ -19,7 +19,7 @@ const SEGMENTS = [
 
 const SpinWheel = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [spinning, setSpinning] = useState(false);
   const spinningRef = useRef(false); // Ref for loop access
