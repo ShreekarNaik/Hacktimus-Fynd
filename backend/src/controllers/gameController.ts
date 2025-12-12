@@ -147,7 +147,117 @@ export const submitScore = async (req: Request, res: Response) => {
         distributedAt: Date.now(),
       };
 
-      // Save reward to Boltic
+      // Create the coupon payload for Boltic workflow
+      const expiryDate = new Date(reward.expiryDate);
+      const couponPayload = {
+        rule_definition: {
+          scope: ["brand_id"],
+          calculate_on: "esp",
+          is_exact: false,
+          currency_code: "INR",
+          type: "bundle",
+          applicable_on: "quantity",
+          auto_apply: false,
+          value_type: "absolute",
+        },
+        display_meta: {
+          description: `Congratulations! You won ${discount}% off playing ${session.gameName}`,
+          remove: { subtitle: "", title: "" },
+          apply: {
+            subtitle: `You saved ${discount}% on your order!`,
+            title: "Game Reward Applied!",
+          },
+          subtitle: `${discount}% discount from ${session.gameName} game`,
+          auto: { subtitle: "", title: "" },
+          title: `${discount}% Off - Game Reward`,
+        },
+        rule: [
+          {
+            max: 0,
+            min: 100,
+            value: discount,
+            key: 2,
+          },
+        ],
+        state: {
+          is_display: true,
+          is_archived: false,
+          is_public: true,
+        },
+        identifiers: {
+          user_id: [session.mobileNumber],
+          brand_id: [9],
+        },
+        ownership: {
+          payable_category: "seller",
+          payable_by: "",
+        },
+        _schedule: {
+          duration: null,
+          end: expiryDate.toISOString(),
+          next_schedule: [
+            {
+              start: new Date().toISOString(),
+              end: expiryDate.toISOString(),
+            },
+          ],
+          status: "approved",
+          start: new Date().toISOString(),
+          cron: null,
+        },
+        validation: {
+          user_registered_after: null,
+          app_id: ["5e1d9bec6d6b7e000146c840"],
+          anonymous: true,
+        },
+        validity: {
+          priority: 0,
+        },
+        action: {
+          action_date: null,
+          txn_mode: "coupon",
+        },
+        type_slug: "bundle_quantity_absolute",
+        coupon_counts: 1,
+        coupon_type: "single",
+        coupon_prefix: `GAME${discount}_`,
+        restrictions: {
+          uses: {
+            remaining: { app: -1, total: -1, user: -1 },
+            maximum: { app: 2, total: 2, user: 2 },
+          },
+          post_order: {
+            return_allowed: true,
+            cancellation_allowed: true,
+          },
+          platforms: ["web", "android", "ios"],
+        },
+        code: couponCode,
+      };
+
+      try {
+        // Call Boltic workflow to create the coupon in Fynd
+        console.log(
+          `[GameController] Creating coupon ${couponCode} for user ${session.mobileNumber} via Boltic workflow`
+        );
+        await boltic.createCouponViaBoltic(
+          couponCode,
+          session.mobileNumber,
+          couponPayload
+        );
+        console.log(
+          `[GameController] Coupon ${couponCode} created successfully`
+        );
+      } catch (workflowError: any) {
+        console.error(
+          "[GameController] Error creating coupon via Boltic workflow:",
+          workflowError
+        );
+        // Continue anyway - we'll still save the reward to database
+        // This allows the system to work even if Fynd API is down
+      }
+
+      // Save reward to Boltic database
       await boltic.insertRecord("rewards", reward);
 
       // Update user wins
@@ -218,10 +328,119 @@ export const claimLeaderboardReward = async (req: Request, res: Response) => {
       distributedAt: Date.now(),
     };
 
-    // 3. Save Reward
+    // Create the coupon payload for Boltic workflow
+    const expiryDate = new Date(reward.expiryDate);
+    const couponPayload = {
+      rule_definition: {
+        scope: ["brand_id"],
+        calculate_on: "esp",
+        is_exact: false,
+        currency_code: "INR",
+        type: "bundle",
+        applicable_on: "quantity",
+        auto_apply: false,
+        value_type: "absolute",
+      },
+      display_meta: {
+        description: `CHAMPION REWARD! You are #1 in ${gameName}!`,
+        remove: { subtitle: "", title: "" },
+        apply: {
+          subtitle: `You saved ${discount}% as the champion!`,
+          title: "Champion Reward Applied!",
+        },
+        subtitle: `${discount}% discount for being #1 champion`,
+        auto: { subtitle: "", title: "" },
+        title: `${discount}% Off - Champion Reward`,
+      },
+      rule: [
+        {
+          max: 0,
+          min: 100,
+          value: discount,
+          key: 2,
+        },
+      ],
+      state: {
+        is_display: true,
+        is_archived: false,
+        is_public: true,
+      },
+      identifiers: {
+        user_id: [mobileNumber],
+        brand_id: [9],
+      },
+      ownership: {
+        payable_category: "seller",
+        payable_by: "",
+      },
+      _schedule: {
+        duration: null,
+        end: expiryDate.toISOString(),
+        next_schedule: [
+          {
+            start: new Date().toISOString(),
+            end: expiryDate.toISOString(),
+          },
+        ],
+        status: "approved",
+        start: new Date().toISOString(),
+        cron: null,
+      },
+      validation: {
+        user_registered_after: null,
+        app_id: ["5e1d9bec6d6b7e000146c840"],
+        anonymous: true,
+      },
+      validity: {
+        priority: 0,
+      },
+      action: {
+        action_date: null,
+        txn_mode: "coupon",
+      },
+      type_slug: "bundle_quantity_absolute",
+      coupon_counts: 1,
+      coupon_type: "single",
+      coupon_prefix: `CHAMPION${discount}_`,
+      restrictions: {
+        uses: {
+          remaining: { app: -1, total: -1, user: -1 },
+          maximum: { app: 2, total: 2, user: 2 },
+        },
+        post_order: {
+          return_allowed: true,
+          cancellation_allowed: true,
+        },
+        platforms: ["web", "android", "ios"],
+      },
+      code: couponCode,
+    };
+
+    try {
+      // 3. Call Boltic workflow to create the coupon in Fynd
+      console.log(
+        `[GameController] Creating champion coupon ${couponCode} for user ${mobileNumber} via Boltic workflow`
+      );
+      await boltic.createCouponViaBoltic(
+        couponCode,
+        mobileNumber,
+        couponPayload
+      );
+      console.log(
+        `[GameController] Champion coupon ${couponCode} created successfully`
+      );
+    } catch (workflowError: any) {
+      console.error(
+        "[GameController] Error creating champion coupon via Boltic workflow:",
+        workflowError
+      );
+      // Continue anyway - we'll still save the reward to database
+    }
+
+    // 4. Save Reward to database
     await boltic.insertRecord("rewards", reward);
 
-    // 4. Remove from Leaderboard (Consume the win)
+    // 5. Remove from Leaderboard (Consume the win)
     await boltic.removeLeaderboardEntry(mobileNumber, gameName);
 
     res.json({ status: "claimed", reward });

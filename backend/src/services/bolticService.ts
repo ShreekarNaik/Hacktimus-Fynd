@@ -160,9 +160,21 @@ export class BolticService implements IBolticService {
 
       const autoColumns = ["updated_at"]; // Exclude updated_at if managed by DB trigger? Or just include all.
 
-      const entries = Object.entries(record as any).filter(
-        ([key]) => !autoColumns.includes(camelToSnake(key))
-      );
+      // Filter out optional fields that may not exist in DB yet
+      const optionalFields = ["terms", "company"];
+      const entries = Object.entries(record as any).filter(([key]) => {
+        const snakeKey = camelToSnake(key);
+        // Skip auto columns
+        if (autoColumns.includes(snakeKey)) return false;
+        // Skip optional fields if they're undefined/null
+        const value = (record as any)[key];
+        if (
+          optionalFields.includes(key) &&
+          (value === undefined || value === null)
+        )
+          return false;
+        return true;
+      });
 
       const columns = entries
         .map(([col]) => `"${camelToSnake(col)}"`)
@@ -346,6 +358,8 @@ export class BolticService implements IBolticService {
         expiryDate: Number(row.expiry_date),
         redeemed: !!row.redeemed,
         distributedAt: Number(row.distributed_at),
+        terms: row.terms || undefined,
+        company: row.company || undefined,
       }));
     } catch (error) {
       console.error("[BolticService] Error getting user rewards:", error);

@@ -58,7 +58,7 @@ const Profile = () => {
   const fetchRewards = async () => {
     try {
       const identifier =
-        user?.userId || user?.phoneNumber || user?.mobileNumber;
+        user?.mobileNumber || user?.phoneNumber || user?.userId;
       if (!identifier) return;
       const res = await client.get(`/user/profile?mobileNumber=${identifier}`);
       if (res.data.rewards) {
@@ -74,7 +74,7 @@ const Profile = () => {
   const fetchPendingRewards = async () => {
     try {
       const identifier =
-        user?.userId || user?.phoneNumber || user?.mobileNumber;
+        user?.mobileNumber || user?.phoneNumber || user?.userId;
       if (!identifier) return;
       const res = await client.get(
         `/games/pending-rewards?mobileNumber=${identifier}`
@@ -89,7 +89,7 @@ const Profile = () => {
     setClaiming(true);
     try {
       const identifier =
-        user?.userId || user?.phoneNumber || user?.mobileNumber;
+        user?.mobileNumber || user?.phoneNumber || user?.userId;
       if (!identifier) return;
       const res = await client.post("/games/claim-leaderboard", {
         mobileNumber: identifier,
@@ -121,7 +121,8 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     if (!editName.trim()) return;
     try {
-      const identifier = user!.userId || user!.phoneNumber;
+      const identifier =
+        user!.mobileNumber || user!.phoneNumber || user!.userId;
       if (!identifier) return;
       // Updating username/display name
       await updateUserProfile(identifier, {

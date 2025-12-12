@@ -125,7 +125,7 @@ export const createCoupon = async (req: Request, res: Response) => {
       return;
     }
 
-    // Generate unique coupon code
+    // Generate unique coupon code (alphanumeric with underscores only)
     const couponCode = `${couponPrefix}${Date.now().toString().slice(-6)}`;
 
     // Calculate end date
@@ -134,7 +134,7 @@ export const createCoupon = async (req: Request, res: Response) => {
     endDate.setDate(endDate.getDate() + validityDays);
 
     // EXACT structure from Body_Format_for_Coupon_creation.json
-    // Only replacing: display_meta texts, identifiers.user_id, identifiers.brand_id, _schedule.end, code
+    // Only replacing: identifiers.user_id, identifiers.brand_id, _schedule.end/next_schedule.end, code
     const couponPayload = {
       rule_definition: {
         scope: ["brand_id"],
@@ -153,20 +153,20 @@ export const createCoupon = async (req: Request, res: Response) => {
           title: "",
         },
         apply: {
-          subtitle: req.body.applySubtitle || "You saved 1000 bucks",
-          title: req.body.applyTitle || "Wow! You just got an awesome deal",
+          subtitle: "You saved 1000 bucks",
+          title: "Wow! Your IQ just got you an awesome deal",
         },
-        subtitle: req.body.subtitle || "test subtitle",
+        subtitle: "test subtitle",
         auto: {
           subtitle: "",
           title: "",
         },
-        title: req.body.title || "1000 Off on first 2 items",
+        title: "75% Off on first 2 items",
       },
       rule: [
         {
           max: 0,
-          min: 3000,
+          min: 2000,
           value: 1001,
           key: 2,
         },
@@ -182,7 +182,7 @@ export const createCoupon = async (req: Request, res: Response) => {
       },
       ownership: {
         payable_category: "seller",
-        payable_by: "",
+        payable_by: "12435",
       },
       _schedule: {
         duration: null,
@@ -221,9 +221,9 @@ export const createCoupon = async (req: Request, res: Response) => {
             user: -1,
           },
           maximum: {
-            app: -1,
-            total: -1,
-            user: -1,
+            app: 2,
+            total: 2,
+            user: 2,
           },
         },
         post_order: {

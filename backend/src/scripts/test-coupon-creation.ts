@@ -10,8 +10,8 @@ import axios from "axios";
 config();
 
 // Sample coupon payload - EXACT copy from Body_Format_for_Coupon_creation.json
-// Only changing: code (dynamic timestamp)
-const couponCode = "TEST_" + Date.now().toString().slice(-6);
+// Only changing: code (use TESTCOUPON_1234 for testing)
+const couponCode = "TESTCOUPON_1234";
 const sampleCouponPayload = {
   rule_definition: {
     scope: ["brand_id"],
@@ -31,19 +31,19 @@ const sampleCouponPayload = {
     },
     apply: {
       subtitle: "You saved 1000 bucks",
-      title: "Wow! You just got an awesome deal",
+      title: "Wow! Your IQ just got you an awesome deal",
     },
     subtitle: "test subtitle",
     auto: {
       subtitle: "",
       title: "",
     },
-    title: "1000 Off on first 2 items",
+    title: "75% Off on first 2 items",
   },
   rule: [
     {
       max: 0,
-      min: 3000,
+      min: 2000,
       value: 1001,
       key: 2,
     },
@@ -98,9 +98,9 @@ const sampleCouponPayload = {
         user: -1,
       },
       maximum: {
-        app: -1,
-        total: -1,
-        user: -1,
+        app: 2,
+        total: 2,
+        user: 2,
       },
     },
     post_order: {
@@ -144,9 +144,7 @@ async function testCouponCreation() {
 
   console.log("\n🔗 Request URL:", url.toString());
   console.log("\n📦 Payload Structure:");
-  console.log(
-    JSON.stringify(sampleCouponPayload, null, 2).slice(0, 500) + "...\n"
-  );
+  console.log(JSON.stringify(sampleCouponPayload, null, 2));
 
   try {
     console.log("📤 Sending request to Boltic workflow...\n");

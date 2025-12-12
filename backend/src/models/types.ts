@@ -45,6 +45,8 @@ export interface Reward {
   expiryDate: number;
   redeemed: boolean;
   distributedAt: number;
+  terms?: string;
+  company?: string;
 }
 
 export interface CartAbandonment {
