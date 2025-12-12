@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "tables:help": "node scripts/create-tables-help.js",
-    "test:boltic": "tsx src/test-boltic.ts"
+    "test:boltic": "tsx src/test-boltic.ts",
+    "test:coupon": "tsx src/scripts/test-coupon-creation.ts"
   },
   "keywords": [],
   "author": "",

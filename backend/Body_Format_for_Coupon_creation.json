@@ -1,0 +1,99 @@
+{
+  "rule_definition": {
+    "scope": ["brand_id"],
+    "calculate_on": "esp",
+    "is_exact": false,
+    "currency_code": "INR",
+    "type": "bundle",
+    "applicable_on": "quantity",
+    "auto_apply": false,
+    "value_type": "absolute"
+  },
+  "display_meta": {
+    "description": "",
+    "remove": {
+      "subtitle": "",
+      "title": ""
+    },
+    "apply": {
+      "subtitle": "You saved 1000 bucks",
+      "title": "Wow! You just got an awesome deal"
+    },
+    "subtitle": "test subtitle",
+    "auto": {
+      "subtitle": "",
+      "title": ""
+    },
+    "title": "1000 Off on first 2 items"
+  },
+  "rule": [
+    {
+      "max": 0,
+      "min": 3000,
+      "value": 1001,
+      "key": 2
+    }
+  ],
+  "state": {
+    "is_display": true,
+    "is_archived": false,
+    "is_public": true
+  },
+  "identifiers": {
+    "user_id": [],
+    "brand_id": [9]
+  },
+  "ownership": {
+    "payable_category": "seller",
+    "payable_by": ""
+  },
+  "_schedule": {
+    "duration": null,
+    "end": "2026-10-19T08:47:39.025Z",
+    "next_schedule": [
+      {
+        "start": "2019-10-18T08:35:39.000Z",
+        "end": "2026-10-19T08:47:39.025Z"
+      }
+    ],
+    "status": "approved",
+    "start": "2019-10-18T08:35:39.000Z",
+    "cron": null
+  },
+  "validation": {
+    "user_registered_after": null,
+    "app_id": ["5e1d9bec6d6b7e000146c840"],
+    "anonymous": true
+  },
+  "validity": {
+    "priority": 0
+  },
+  "action": {
+    "action_date": null,
+    "txn_mode": "coupon"
+  },
+  "type_slug": "bundle_quantity_absolute",
+  "coupon_counts": 1,
+  "coupon_type": "single",
+  "coupon_prefix": "TEST_",
+  "restrictions": {
+    "uses": {
+      "remaining": {
+        "app": -1,
+        "total": -1,
+        "user": -1
+      },
+      "maximum": {
+        "app": -1,
+        "total": -1,
+        "user": -1
+      }
+    },
+    "post_order": {
+      "return_allowed": true,
+      "cancellation_allowed": true
+    },
+    "platforms": ["web", "android", "ios"]
+  },
+  "code": "1000off"
+}

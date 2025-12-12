@@ -28,6 +28,7 @@ export interface GameSession {
 export interface LeaderboardEntry {
   id: string;
   mobileNumber: string;
+  username?: string;
   gameName: string;
   score: number;
   weekNumber: number;

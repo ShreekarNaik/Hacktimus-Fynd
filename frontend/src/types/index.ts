@@ -7,6 +7,7 @@ export interface User {
   winsThisWeek: number;
   preferredStores?: string[];
   phoneNumber?: string; // Also adding phoneNumber as it was used in mock data
+  mobileNumber?: string; // Mirror backend field name for consistency
 }
 
 export interface AuthState {

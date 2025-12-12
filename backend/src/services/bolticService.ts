@@ -77,11 +77,12 @@ export class BolticService implements IBolticService {
   ): Promise<LeaderboardEntry[]> {
     try {
       const sql = `
-        SELECT * FROM leaderboard 
-        WHERE "game_name" = '${this.escapeSql(
-          gameName
-        )}' AND "week_number" = ${weekNumber}
-        ORDER BY "score" DESC
+        SELECT l.*, u.username
+        FROM leaderboard l
+        LEFT JOIN users u ON u.mobile_number = l.mobile_number
+        WHERE l."game_name" = '${this.escapeSql(gameName)}' 
+          AND l."week_number" = ${weekNumber}
+        ORDER BY l."score" DESC
         LIMIT ${limit};
       `;
 
@@ -96,6 +97,7 @@ export class BolticService implements IBolticService {
       return (rows || []).map((row: any) => ({
         id: row.id,
         mobileNumber: row.mobile_number,
+        username: row.username,
         gameName: row.game_name,
         score: Number(row.score),
         weekNumber: Number(row.week_number),
@@ -339,15 +341,46 @@ export class BolticService implements IBolticService {
         mobileNumber: row.mobile_number,
         rewardType: row.reward_type,
         rewardTier: row.reward_tier,
-        discountPercentage: row.discount_percentage,
+        discountPercentage: Number(row.discount_percentage),
         couponCode: row.coupon_code,
-        expiryDate: row.expiry_date,
-        redeemed: row.redeemed,
-        distributedAt: row.distributed_at,
+        expiryDate: Number(row.expiry_date),
+        redeemed: !!row.redeemed,
+        distributedAt: Number(row.distributed_at),
       }));
     } catch (error) {
       console.error("[BolticService] Error getting user rewards:", error);
       return [];
+    }
+  }
+
+  /**
+   * Insert a reward (coupon) for a user
+   */
+  async insertReward(reward: Reward): Promise<Reward> {
+    try {
+      const sql = `
+        INSERT INTO rewards (
+          "reward_id", "mobile_number", "reward_type", "reward_tier", 
+          "discount_percentage", "coupon_code", "expiry_date", "redeemed", "distributed_at"
+        )
+        VALUES (
+          '${reward.rewardId}',
+          '${this.escapeSql(reward.mobileNumber)}',
+          '${this.escapeSql(reward.rewardType)}',
+          '${this.escapeSql(reward.rewardTier)}',
+          ${reward.discountPercentage},
+          '${this.escapeSql(reward.couponCode)}',
+          ${reward.expiryDate},
+          ${reward.redeemed ? "true" : "false"},
+          ${reward.distributedAt}
+        );
+      `;
+      await this.executeSql(sql);
+      console.log("[BolticService] Inserted reward:", reward.rewardId);
+      return reward;
+    } catch (error) {
+      console.error("[BolticService] Error inserting reward:", error);
+      throw error;
     }
   }
 
@@ -723,6 +756,52 @@ export class BolticService implements IBolticService {
     } catch (error) {
       console.error("[BolticService] Error deleting coupon:", error);
       return false;
+    }
+  }
+
+  /**
+   * Create a coupon via Boltic workflow
+   * Calls the Make Coupon workflow endpoint with the Fynd coupon creation payload
+   */
+  async createCouponViaBoltic(
+    couponCode: string,
+    mobileNumber: string,
+    couponPayload: any
+  ): Promise<any> {
+    try {
+      const workflowUrl = process.env.BOLTIC_MAKE_COUPON_WORKFLOW_URL;
+      if (!workflowUrl) {
+        throw new Error(
+          "BOLTIC_MAKE_COUPON_WORKFLOW_URL environment variable is not set"
+        );
+      }
+
+      // Construct the URL with query parameters
+      const url = new URL(workflowUrl);
+      url.searchParams.set("coupon_code", couponCode);
+      url.searchParams.set("mobile_number", mobileNumber);
+
+      console.log(
+        `[BolticService] Creating coupon via workflow for ${mobileNumber}, code: ${couponCode}`
+      );
+
+      // Make POST request with the coupon payload in the body
+      const axios = require("axios");
+      const response = await axios.post(url.toString(), couponPayload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        timeout: 30000,
+      });
+
+      console.log(
+        "[BolticService] Coupon creation workflow response:",
+        response.data
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("[BolticService] Error creating coupon via Boltic:", error);
+      throw error;
     }
   }
 

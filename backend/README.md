@@ -5,9 +5,10 @@ Backend API for the promotional games platform using **Boltic Tables** for datab
 ## 🎯 Overview
 
 This backend provides REST APIs for:
+
 - User authentication and management
 - Game session tracking
-- Leaderboard management  
+- Leaderboard management
 - Rewards distribution
 - Cart abandonment recovery via webhooks
 
@@ -21,9 +22,11 @@ pnpm install
 
 ### 2. Configure Environment
 
-The `.env` file is already configured with:
+The `.env` file should be configured with:
+
 - `BOLTIC_API_KEY` - Your Boltic API key
 - `BOLTIC_REGION` - asia-south1
+- `BOLTIC_MAKE_COUPON_WORKFLOW_URL` - Boltic workflow URL for coupon creation (e.g., `https://asia-south1.workflow.boltic.app/add6173e-c0f3-44ab-a115-9b3a88f3fe1f/makecoupon`)
 - Other configuration variables
 
 ### 3. Create Boltic Tables
@@ -37,6 +40,7 @@ pnpm run tables:help
 This will display formatted instructions with AI prompts for creating all 5 tables in the Boltic Console.
 
 **Or manually:**
+
 1. Open https://asia-south1.console.boltic.io/
 2. Navigate to Tables
 3. Create the 5 tables using AI prompts (see `dev_docs.md` or run `pnpm run tables:help`)
@@ -48,6 +52,7 @@ pnpm run test:boltic
 ```
 
 This will verify:
+
 - ✅ Boltic SDK connection
 - ✅ Tables are accessible
 - ✅ CRUD operations work
@@ -71,13 +76,13 @@ Server will start on `http://localhost:3000`
 
 ## 🛠️ Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm run dev` | Start development server with hot reload |
-| `pnpm run build` | Build TypeScript to JavaScript |
-| `pnpm run start` | Run production server |
-| `pnpm run tables:help` | Display table creation guide |
-| `pnpm run test:boltic` | Test Boltic connection and operations |
+| Command                | Description                              |
+| ---------------------- | ---------------------------------------- |
+| `pnpm run dev`         | Start development server with hot reload |
+| `pnpm run build`       | Build TypeScript to JavaScript           |
+| `pnpm run start`       | Run production server                    |
+| `pnpm run tables:help` | Display table creation guide             |
+| `pnpm run test:boltic` | Test Boltic connection and operations    |
 
 ## 📁 Project Structure
 
@@ -109,18 +114,22 @@ backend/
 ## 🔌 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/login` - User login (password: "test123")
 
 ### Games
+
 - `POST /api/games/complete` - Submit game completion
 - `GET /api/games/leaderboard/:gameName` - Get leaderboard
 - `POST /api/games/claim-reward` - Claim leaderboard reward
 
 ### User
+
 - `GET /api/user/profile/:userId` - Get user profile
 - `GET /api/user/rewards/:userId` - Get user rewards
 
 ### Webhooks
+
 - `POST /api/webhooks/cart` - Fynd cart webhook
 - `POST /api/webhooks/cart-recovery` - Cart recovery game completion
 
@@ -135,6 +144,7 @@ backend/
 ## 🎮 Game Integration
 
 Games send completion data to:
+
 ```typescript
 POST /api/games/complete
 {
@@ -155,33 +165,37 @@ POST /api/games/complete
 
 ## 📊 Database Tables
 
-| Table | Purpose |
-|-------|---------|
-| `users` | User profiles and stats |
-| `game_sessions` | Game completion records |
-| `leaderboard` | Weekly game rankings |
-| `rewards` | Coupon rewards earned |
+| Table               | Purpose                 |
+| ------------------- | ----------------------- |
+| `users`             | User profiles and stats |
+| `game_sessions`     | Game completion records |
+| `leaderboard`       | Weekly game rankings    |
+| `rewards`           | Coupon rewards earned   |
 | `cart_abandonments` | Abandoned cart tracking |
 
 ## 🐛 Troubleshooting
 
 ### Backend won't start
+
 - Check if port 3000 is available
 - Verify `.env` file exists
 - Run `pnpm install`
 
 ### Boltic connection issues
+
 - Verify `BOLTIC_API_KEY` in `.env`
 - Check tables are created in console
 - Run `pnpm run test:boltic`
 
 ### TypeScript errors
+
 - Run `pnpm run build` to check compilation
 - Check for missing type definitions
 
 ## 🎯 For Development
 
 **This is a hackathon POC** - focus is on:
+
 - ✅ Working functionality
 - ✅ Real database integration (not mocks)
 - ✅ Clean, maintainable code
@@ -218,6 +232,7 @@ For hackathon team members:
 ## 📞 Support
 
 Check the documentation:
+
 - Questions about setup? → `BOLTIC_SETUP_SUMMARY.md`
 - Need API details? → `dev_docs.md`
 - Table creation? → `pnpm run tables:help`

@@ -57,9 +57,10 @@ const Profile = () => {
 
   const fetchRewards = async () => {
     try {
-      const identifier = user?.userId || user?.phoneNumber;
+      const identifier =
+        user?.userId || user?.phoneNumber || user?.mobileNumber;
       if (!identifier) return;
-      const res = await client.get(`/user/profile?userId=${identifier}`);
+      const res = await client.get(`/user/profile?mobileNumber=${identifier}`);
       if (res.data.rewards) {
         setRewards(res.data.rewards);
       }
@@ -72,10 +73,11 @@ const Profile = () => {
 
   const fetchPendingRewards = async () => {
     try {
-      const identifier = user?.userId || user?.phoneNumber;
+      const identifier =
+        user?.userId || user?.phoneNumber || user?.mobileNumber;
       if (!identifier) return;
       const res = await client.get(
-        `/games/pending-rewards?userId=${identifier}`
+        `/games/pending-rewards?mobileNumber=${identifier}`
       );
       setPendingRewards(res.data);
     } catch (e) {
@@ -86,10 +88,11 @@ const Profile = () => {
   const handleClaim = async (gameName: string) => {
     setClaiming(true);
     try {
-      const identifier = user?.userId || user?.phoneNumber;
+      const identifier =
+        user?.userId || user?.phoneNumber || user?.mobileNumber;
       if (!identifier) return;
       const res = await client.post("/games/claim-leaderboard", {
-        userId: identifier,
+        mobileNumber: identifier,
         gameName,
       });
       setSelectedReward({

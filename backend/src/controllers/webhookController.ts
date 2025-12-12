@@ -20,36 +20,154 @@ const carts: Record<string, any> = {};
  */
 export const handleAbandonedCart = async (req: Request, res: Response) => {
   try {
-    const mobileNumber = req.query.user_id as string;
-    const { cart_json_data } = req.body;
+    // Prefer query param, else discover from body (customer_id)
+    let userId = (req.query.user_id as string) || undefined;
+    const { cart_json_data } = req.body || {};
 
-    if (!mobileNumber) {
-      res.status(400).json({ error: "user_id query parameter is required" });
+    // Helper: extract the first nested object's `id` from any arbitrary JSON body
+    const getFirstSubobjectId = (payload: any): string | undefined => {
+      try {
+        if (!payload) return undefined;
+        if (Array.isArray(payload)) {
+          const first = payload[0];
+          if (first && typeof first === "object") {
+            if (typeof (first as any).id !== "undefined")
+              return String((first as any).id);
+            // Also allow first nested value inside first element
+            for (const v of Object.values(first)) {
+              if (
+                v &&
+                typeof v === "object" &&
+                typeof (v as any).id !== "undefined"
+              )
+                return String((v as any).id);
+            }
+          }
+          return undefined;
+        }
+        if (typeof payload === "object") {
+          for (const v of Object.values(payload)) {
+            if (!v) continue;
+            if (typeof v === "object") {
+              if (typeof (v as any).id !== "undefined")
+                return String((v as any).id);
+              if (
+                Array.isArray(v) &&
+                v[0] &&
+                typeof v[0] === "object" &&
+                typeof (v[0] as any).id !== "undefined"
+              ) {
+                return String((v[0] as any).id);
+              }
+            }
+          }
+        }
+      } catch (_) {
+        // swallow and continue with fallback
+      }
+      return undefined;
+    };
+
+    // Helper: extract a `customer_id` from arbitrary JSON body (top-level, nested object, or first array element)
+    const getFirstCustomerId = (payload: any): string | undefined => {
+      try {
+        if (!payload) return undefined;
+        const pick = (obj: any): string | undefined => {
+          if (obj && typeof obj === "object") {
+            if (typeof (obj as any).customer_id !== "undefined")
+              return String((obj as any).customer_id);
+          }
+          return undefined;
+        };
+
+        // Direct on root
+        const direct = pick(payload);
+        if (direct) return direct;
+
+        // If array: inspect first element and its nested values
+        if (Array.isArray(payload)) {
+          const first = payload[0];
+          const fromFirst = pick(first);
+          if (fromFirst) return fromFirst;
+          if (first && typeof first === "object") {
+            for (const v of Object.values(first)) {
+              const nested = pick(v);
+              if (nested) return nested;
+            }
+          }
+          return undefined;
+        }
+
+        // If object: inspect its values (one level) and their first array elements
+        if (typeof payload === "object") {
+          for (const v of Object.values(payload)) {
+            const fromValue = pick(v);
+            if (fromValue) return fromValue;
+            if (Array.isArray(v)) {
+              const val = pick(v[0]);
+              if (val) return val;
+            } else if (v && typeof v === "object") {
+              // one more shallow level
+              const deeper = pick(v);
+              if (deeper) return deeper;
+              for (const vv of Object.values(v)) {
+                const deeper2 = pick(vv);
+                if (deeper2) return deeper2;
+              }
+            }
+          }
+        }
+      } catch (_) {
+        // ignore
+      }
+      return undefined;
+    };
+
+    // Resolve userId if not provided in query
+    if (!userId) {
+      const discoveredCustomerId =
+        cart_json_data?.customer_id ?? getFirstCustomerId(req.body);
+      if (discoveredCustomerId) {
+        userId = String(discoveredCustomerId);
+      }
+    }
+
+    if (!userId) {
+      res
+        .status(400)
+        .json({
+          error: "user id not provided (user_id query or customer_id in body)",
+        });
       return;
     }
 
-    console.log(`[AbandonedCart] Processing for user: ${mobileNumber}`);
+    console.log(`[AbandonedCart] Processing for user: ${userId}`);
     console.log(
       `[AbandonedCart] Cart data:`,
       cart_json_data ? "received" : "not provided"
     );
 
-    // Extract cart ID if available
-    const cartId = cart_json_data?.id || `cart-${Date.now()}`;
+    // Extract cart ID if available (bypass: accept any body shape; use first subobject id if present)
+    const fallbackId = `cart-${Date.now()}`;
+    const discoveredId = cart_json_data?.id ?? getFirstSubobjectId(req.body);
+    const cartId = discoveredId ? String(discoveredId) : fallbackId;
 
     // Generate the game recovery URL
     const gameUrl = new URL(`/game/${RECOVERY_GAME}`, FRONTEND_URL);
     gameUrl.searchParams.set("mode", "popup");
-    gameUrl.searchParams.set("mobileNumber", mobileNumber);
+    gameUrl.searchParams.set("mobileNumber", userId);
     gameUrl.searchParams.set("cartId", cartId);
     gameUrl.searchParams.set("isCartRecovery", "true");
 
     // Log this abandonment event
     const abandonmentRecord = {
       cartId,
-      mobileNumber,
-      items: cart_json_data?.items || [],
-      cartValue: cart_json_data?.breakup_values?.raw?.total || 0,
+      mobileNumber: userId,
+      items: Array.isArray(cart_json_data?.items) ? cart_json_data.items : [],
+      cartValue:
+        typeof cart_json_data?.breakup_values?.raw?.total === "number"
+          ? cart_json_data.breakup_values.raw.total
+          : 0,
       createdAt: Date.now(),
       notificationSent: true,
       gameLink: gameUrl.toString(),
@@ -73,7 +191,7 @@ export const handleAbandonedCart = async (req: Request, res: Response) => {
     res.json({
       url: gameUrl.toString(),
       cartId,
-      mobileNumber,
+      mobileNumber: userId,
     });
   } catch (error) {
     console.error("[AbandonedCart] Error:", error);

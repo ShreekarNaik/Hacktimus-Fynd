@@ -45,9 +45,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await client.get(
         `/user/profile?mobileNumber=${encodeURIComponent(storedUserId)}`
       );
+      const profile = res.data;
+      const normalizedUser = {
+        ...profile,
+        userId: profile.username || profile.mobileNumber,
+        phoneNumber: profile.mobileNumber,
+        mobileNumber: profile.mobileNumber,
+      };
       setState((prev) => ({
         ...prev,
-        user: res.data,
+        user: normalizedUser,
         isAuthenticated: true,
         isLoading: false,
       }));
@@ -74,9 +81,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Mocking the original login flow calling the backend
       const res = await client.post("/auth/login", { userId, password });
       const { token, user } = res.data;
+      const normalizedUser = {
+        ...user,
+        userId: user.username || user.mobileNumber || user.userId,
+        phoneNumber: user.mobileNumber || user.phoneNumber,
+        mobileNumber: user.mobileNumber || user.phoneNumber,
+      };
       localStorage.setItem("token", token);
-      localStorage.setItem("userId", user.userId);
-      setState({ user, token, isAuthenticated: true, isLoading: false });
+      localStorage.setItem(
+        "userId",
+        normalizedUser.phoneNumber || normalizedUser.userId
+      );
+      setState({
+        user: normalizedUser,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+      });
     } catch (e: any) {
       console.error("Login failed", e);
       throw e.response?.data?.error || "Login Failed";
@@ -112,9 +133,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         requestId,
       });
       const { token, user } = res.data;
+      const normalizedUser = {
+        ...user,
+        userId: user.username || user.mobileNumber || user.userId,
+        phoneNumber: user.mobileNumber || user.phoneNumber,
+        mobileNumber: user.mobileNumber || user.phoneNumber,
+      };
       localStorage.setItem("token", token);
-      localStorage.setItem("userId", user.mobileNumber);
-      setState({ user, token, isAuthenticated: true, isLoading: false });
+      localStorage.setItem(
+        "userId",
+        normalizedUser.phoneNumber || normalizedUser.userId
+      );
+      setState({
+        user: normalizedUser,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+      });
     } catch (e: any) {
       console.error("Login with OTP failed", e);
       const errorMessage =
@@ -142,10 +177,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!user) {
         throw new Error("Registration succeeded but no user returned");
       }
-
+      const normalizedUser = {
+        ...user,
+        userId: user.username || user.mobileNumber || user.userId,
+        phoneNumber: user.mobileNumber || user.phoneNumber,
+        mobileNumber: user.mobileNumber || user.phoneNumber,
+      };
       localStorage.setItem("token", token);
-      localStorage.setItem("userId", user.mobileNumber);
-      setState({ user, token, isAuthenticated: true, isLoading: false });
+      localStorage.setItem(
+        "userId",
+        normalizedUser.phoneNumber || normalizedUser.userId
+      );
+      setState({
+        user: normalizedUser,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+      });
     } catch (e: any) {
       console.error("Registration failed", e);
       throw e.response?.data?.error || "Registration Failed";
@@ -164,12 +212,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updateUserProfile = async (userId: string, data: any) => {
     try {
-      const payload = { currentUserId: userId, ...data };
+      const payload = { mobileNumber: userId, ...data };
       const res = await client.put("/user/profile", payload);
       if (res.data.success) {
         setState((prev) => ({
           ...prev,
-          user: res.data.user || { ...prev.user, ...data },
+          user: res.data.user
+            ? {
+                ...res.data.user,
+                userId:
+                  res.data.user.username ||
+                  res.data.user.mobileNumber ||
+                  res.data.user.userId,
+                phoneNumber:
+                  res.data.user.mobileNumber || res.data.user.phoneNumber,
+                mobileNumber:
+                  res.data.user.mobileNumber || res.data.user.phoneNumber,
+              }
+            : { ...prev.user, ...data },
         }));
       }
     } catch (e: any) {
