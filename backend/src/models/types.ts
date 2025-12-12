@@ -1,5 +1,6 @@
 export interface User {
   mobileNumber: string; // Primary Key
+  username: string; // Required unique username
   coinsBalance: number;
   dailyLoginStreak: number;
   lastLoginDate: string;

@@ -8,9 +8,13 @@ async function debugTables() {
 
   const tableNames = [
     "user_contact_mapping",
-    "User Contact Mapping",
-    "UserContactMapping",
-    "user_mapping"
+    "users",
+    "leaderboard",
+    "game_sessions",
+    "rewards",
+    "cart_abandonments",
+    "brands",
+    "coupon_templates"
   ];
 
   for (const table of tableNames) {

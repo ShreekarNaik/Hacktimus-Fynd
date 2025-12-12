@@ -42,7 +42,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      const res = await client.get(`/user/${storedUserId}`);
+      const res = await client.get(
+        `/user/profile?mobileNumber=${encodeURIComponent(storedUserId)}`
+      );
       setState((prev) => ({
         ...prev,
         user: res.data,
@@ -111,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
       const { token, user } = res.data;
       localStorage.setItem("token", token);
-      localStorage.setItem("userId", user.userId);
+      localStorage.setItem("userId", user.mobileNumber);
       setState({ user, token, isAuthenticated: true, isLoading: false });
     } catch (e: any) {
       console.error("Login with OTP failed", e);
@@ -142,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       localStorage.setItem("token", token);
-      localStorage.setItem("userId", user.userId);
+      localStorage.setItem("userId", user.mobileNumber);
       setState({ user, token, isAuthenticated: true, isLoading: false });
     } catch (e: any) {
       console.error("Registration failed", e);

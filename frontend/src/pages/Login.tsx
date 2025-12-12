@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Button3D from "../components/Button3D";
+import client from "../api/client";
 
 const Login: React.FC = () => {
   const { loginWithOtp, register, sendOtp } = useAuth();
@@ -17,6 +18,42 @@ const Login: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
+    null
+  );
+  const [checkingUsername, setCheckingUsername] = useState(false);
+
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username.length < 3) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    setCheckingUsername(true);
+    try {
+      const res = await client.get(
+        `/auth/check-username?username=${encodeURIComponent(username)}`
+      );
+      setUsernameAvailable(res.data.available);
+    } catch (err) {
+      console.error("Failed to check username", err);
+      setUsernameAvailable(null);
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isRegistering && username.length >= 3) {
+      const timeoutId = setTimeout(
+        () => checkUsernameAvailability(username),
+        500
+      );
+      return () => clearTimeout(timeoutId);
+    } else {
+      setUsernameAvailable(null);
+    }
+  }, [username, isRegistering]);
 
   const handleSendOtp = async () => {
     if (!phoneNumber || phoneNumber.length < 10) {
@@ -27,12 +64,20 @@ const Login: React.FC = () => {
       setError("Please enter a Username");
       return;
     }
+    if (isRegistering && username.length < 3) {
+      setError("Username must be at least 3 characters");
+      return;
+    }
+    if (isRegistering && usernameAvailable === false) {
+      setError("Username is already taken. Please choose another.");
+      return;
+    }
 
     setLoading(true);
     setError("");
     try {
       const data = await sendOtp(phoneNumber);
-      const req = data?.data?.request_id || data?.request_id || "";
+      const req = data?.requestId || data?.request_id || "";
       if (req) setRequestId(req);
       setStep("OTP");
     } catch (err: any) {
@@ -101,13 +146,46 @@ const Login: React.FC = () => {
         </p>
         <div className="space-y-4 mb-6">
           {isRegistering && step === "ID" && (
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-4 rounded-xl border-2 border-gray-300 font-nunito font-bold text-gray-700 focus:outline-none focus:border-orange-400 bg-white shadow-inner animate-fade-in"
-              placeholder="Choose a Username"
-            />
+            <div className="relative animate-fade-in">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={`w-full p-4 rounded-xl border-2 font-nunito font-bold text-gray-700 focus:outline-none bg-white shadow-inner ${
+                  username.length >= 3
+                    ? usernameAvailable === true
+                      ? "border-green-400 focus:border-green-500"
+                      : usernameAvailable === false
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-gray-300 focus:border-orange-400"
+                    : "border-gray-300 focus:border-orange-400"
+                }`}
+                placeholder="Choose a Username (min 3 chars)"
+                minLength={3}
+                required
+              />
+              {username.length >= 3 && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  {checkingUsername ? (
+                    <span className="text-gray-400 text-sm">⏳</span>
+                  ) : usernameAvailable === true ? (
+                    <span className="text-green-500 text-xl">✓</span>
+                  ) : usernameAvailable === false ? (
+                    <span className="text-red-500 text-xl">✗</span>
+                  ) : null}
+                </div>
+              )}
+              {username.length >= 3 && usernameAvailable === false && (
+                <div className="text-red-500 text-xs font-bold mt-1 text-left">
+                  Username already taken
+                </div>
+              )}
+              {username.length >= 3 && usernameAvailable === true && (
+                <div className="text-green-500 text-xs font-bold mt-1 text-left">
+                  Username available!
+                </div>
+              )}
+            </div>
           )}
 
           <input

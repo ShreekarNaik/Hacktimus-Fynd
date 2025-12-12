@@ -8,7 +8,7 @@ const ADMIN_CREDENTIALS = {
   password: process.env.ADMIN_PASSWORD || 'admin'
 };
 
-const generateId = () => `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+const generateId = () => require('crypto').randomUUID();
 
 export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;

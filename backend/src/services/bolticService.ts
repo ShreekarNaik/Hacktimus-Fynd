@@ -92,14 +92,14 @@ export class BolticService implements IBolticService {
         "week",
         weekNumber
       );
-      
+
       return (rows || []).map((row: any) => ({
         id: row.id,
         mobileNumber: row.mobile_number,
         gameName: row.game_name,
-        score: row.score,
-        weekNumber: row.week_number,
-        timestamp: row.timestamp
+        score: Number(row.score),
+        weekNumber: Number(row.week_number),
+        timestamp: Number(row.timestamp),
       }));
     } catch (error) {
       console.error("[BolticService] Error getting leaderboard:", error);
@@ -155,9 +155,8 @@ export class BolticService implements IBolticService {
       // The previous code had: const autoColumns = ["id", "created_at", "updated_at"];
       // But we often pass explicit `createdAt`.
       // Let's rely on the record passed in.
-      
-      const autoColumns = ["updated_at"]; // Exclude updated_at if managed by DB trigger? Or just include all.
 
+      const autoColumns = ["updated_at"]; // Exclude updated_at if managed by DB trigger? Or just include all.
 
       const entries = Object.entries(record as any).filter(
         ([key]) => !autoColumns.includes(camelToSnake(key))
@@ -166,16 +165,25 @@ export class BolticService implements IBolticService {
       const columns = entries
         .map(([col]) => `"${camelToSnake(col)}"`)
         .join(", ");
-      
-      const values = entries.map(([key, v]) => {
-         const snakeKey = camelToSnake(key);
-         // Check if this is a timestamp column that needs ISO string (based on recent error)
-         // created_at, updated_at, completed_at, distributed_at, timestamp, expiry_date
-         if (['created_at', 'updated_at', 'completed_at', 'distributed_at', 'timestamp', 'expiry_date'].includes(snakeKey) && typeof v === 'number') {
-            return `'${new Date(v).toISOString()}'`;
-         }
-         return this.formatValue(v);
-      }).join(", ");
+
+      const values = entries
+        .map(([key, v]) => {
+          const snakeKey = camelToSnake(key);
+          // Numeric timestamp columns should stay as numbers
+          if (
+            [
+              "timestamp",
+              "expiry_date",
+              "completed_at",
+              "distributed_at",
+            ].includes(snakeKey) &&
+            typeof v === "number"
+          ) {
+            return v.toString();
+          }
+          return this.formatValue(v);
+        })
+        .join(", ");
 
       const sql = `
         INSERT INTO ${tableName} (${columns})
@@ -211,15 +219,15 @@ export class BolticService implements IBolticService {
       // Map snake_case to camelCase User object
       return {
         mobileNumber: row.mobile_number,
-        coinsBalance: row.coins_balance || 0,
-        dailyLoginStreak: row.daily_login_streak || 0,
+        username: row.username,
+        coinsBalance: Number(row.coins_balance || 0),
+        dailyLoginStreak: Number(row.daily_login_streak || 0),
         lastLoginDate: row.last_login_date,
-        totalGamesPlayed: row.total_games_played || 0,
-        totalWins: row.total_wins || 0,
-        winsThisWeek: row.wins_this_week || 0,
-        createdAt: row.created_at,
+        totalGamesPlayed: Number(row.total_games_played || 0),
+        totalWins: Number(row.total_wins || 0),
+        winsThisWeek: Number(row.wins_this_week || 0),
+        createdAt: Number(row.created_at),
         preferredStores: row.preferred_stores, // JSON if stored as such
-        displayName: row.display_name
       };
     } catch (error) {
       console.error("[BolticService] Error getting user:", error);
@@ -258,6 +266,23 @@ export class BolticService implements IBolticService {
   }
 
   /**
+   * Check if username exists
+   */
+  async isUsernameExists(username: string): Promise<boolean> {
+    try {
+      const sql = `SELECT COUNT(*) as count FROM users WHERE LOWER("username") = LOWER('${this.escapeSql(
+        username
+      )}');`;
+      const rows = await this.executeSql(sql);
+      const count = rows && rows.length > 0 ? Number(rows[0].count) : 0;
+      return count > 0;
+    } catch (error) {
+      console.error("[BolticService] Error checking username:", error);
+      return false;
+    }
+  }
+
+  /**
    * Get game sessions for a user
    */
   async getUserGameSessions(
@@ -272,17 +297,17 @@ export class BolticService implements IBolticService {
         LIMIT ${limit};
       `;
       const rows = await this.executeSql(sql);
-      
+
       return (rows || []).map((row: any) => ({
         sessionId: row.session_id,
         mobileNumber: row.mobile_number,
         gameName: row.game_name,
-        score: row.score,
-        coinsEarned: row.coins_earned,
+        score: Number(row.score),
+        coinsEarned: Number(row.coins_earned),
         rewardTier: row.reward_tier,
         completedAt: row.completed_at,
         isCartRecovery: row.is_cart_recovery,
-        cartId: row.cart_id
+        cartId: row.cart_id,
       }));
     } catch (error) {
       console.error("[BolticService] Error getting game sessions:", error);
@@ -306,7 +331,7 @@ export class BolticService implements IBolticService {
         sql += ` AND "redeemed" = ${redeemedFilter}`;
       }
 
-      sql += ` ORDER BY "distributed_at" DESC NOLIMIT;`;
+      sql += ` ORDER BY "distributed_at" DESC LIMIT 1000;`;
 
       const rows = await this.executeSql(sql);
       return (rows || []).map((row: any) => ({
@@ -318,7 +343,7 @@ export class BolticService implements IBolticService {
         couponCode: row.coupon_code,
         expiryDate: row.expiry_date,
         redeemed: row.redeemed,
-        distributedAt: row.distributed_at
+        distributedAt: row.distributed_at,
       }));
     } catch (error) {
       console.error("[BolticService] Error getting user rewards:", error);
@@ -343,11 +368,11 @@ export class BolticService implements IBolticService {
         cartId: row.cart_id,
         mobileNumber: row.mobile_number,
         items: row.items, // JSON assumed handled by driver
-        cartValue: row.cart_value,
+        cartValue: Number(row.cart_value),
         createdAt: row.created_at,
         notificationSent: row.notification_sent,
         gameLink: row.game_link,
-        converted: row.converted
+        converted: row.converted,
       };
     } catch (error) {
       console.error("[BolticService] Error getting cart abandonment:", error);
@@ -480,16 +505,16 @@ export class BolticService implements IBolticService {
   }
 
   /**
-   * Get User ID by Phone Number using "User Contact Mapping" table
+   * Get User ID by Phone Number using "user_contact_mapping" table
    */
   async getUserIdByPhone(phoneNumber: string): Promise<string | null> {
     try {
       // Table name has spaces, so we quote it.
       // Using "mobile_number" as per new schema
-      const sql = `SELECT "user_id" FROM "User Contact Mapping" WHERE "mobile_number" = '${this.escapeSql(
+      const sql = `SELECT "user_id" FROM "user_contact_mapping" WHERE "mobile_number" = '${this.escapeSql(
         phoneNumber
       )}' LIMIT 1;`;
-      
+
       const result = await this.executeSql(sql);
       if (result && result.length > 0) {
         return result[0].user_id;
@@ -507,13 +532,13 @@ export class BolticService implements IBolticService {
   async createMapping(phoneNumber: string, userId: string): Promise<boolean> {
     try {
       // Default app/company IDs if not provided (can be updated later)
-      const appId = "6936cfcb5528738f3bdab871"; 
+      const appId = "6936cfcb5528738f3bdab871";
       const companyId = "12435";
       const now = Date.now();
       const id = this.generateId();
 
       const sql = `
-        INSERT INTO "User Contact Mapping" (
+        INSERT INTO "user_contact_mapping" (
           "id", "user_id", "mobile_number", "email", 
           "application_id", "company_id", "created_at", "updated_at"
         )
@@ -528,9 +553,11 @@ export class BolticService implements IBolticService {
           '${new Date(now).toISOString()}'
         );
       `;
-      
+
       await this.executeSql(sql);
-      console.log(`[BolticService] Created mapping for ${phoneNumber} -> ${userId}`);
+      console.log(
+        `[BolticService] Created mapping for ${phoneNumber} -> ${userId}`
+      );
       return true;
     } catch (error) {
       console.error("[BolticService] Error creating user mapping:", error);
@@ -542,7 +569,7 @@ export class BolticService implements IBolticService {
 
   async getBrands(): Promise<Brand[]> {
     try {
-      const sql = 'SELECT * FROM brands ORDER BY "created_at" DESC NOLIMIT;';
+      const sql = 'SELECT * FROM brands ORDER BY "created_at" DESC LIMIT 1000;';
       const rows = await this.executeSql(sql);
       // No mapping needed for simple Brand object if columns match or are simple
       // But let's be safe if ID/Name are standard.
@@ -550,7 +577,9 @@ export class BolticService implements IBolticService {
       return rows.map((row: any) => ({
         id: row.id,
         name: row.name,
-        createdAt: row.created_at || Date.now()
+        createdAt: row.created_at
+          ? new Date(row.created_at).getTime()
+          : Date.now(),
       }));
     } catch (error) {
       console.error("[BolticService] Error getting brands:", error);
@@ -562,7 +591,9 @@ export class BolticService implements IBolticService {
     try {
       const sql = `
         INSERT INTO brands ("id", "name", "created_at")
-        VALUES ('${brand.id}', '${this.escapeSql(brand.name)}', ${brand.createdAt});
+        VALUES ('${brand.id}', '${this.escapeSql(brand.name)}', '${new Date(
+        brand.createdAt
+      ).toISOString()}');
       `;
       await this.executeSql(sql);
       return brand;
@@ -574,7 +605,9 @@ export class BolticService implements IBolticService {
 
   async updateBrand(id: string, name: string): Promise<boolean> {
     try {
-      const sql = `UPDATE brands SET "name" = '${this.escapeSql(name)}' WHERE "id" = '${this.escapeSql(id)}';`;
+      const sql = `UPDATE brands SET "name" = '${this.escapeSql(
+        name
+      )}' WHERE "id" = '${this.escapeSql(id)}';`;
       await this.executeSql(sql);
       return true;
     } catch (error) {
@@ -594,23 +627,22 @@ export class BolticService implements IBolticService {
     }
   }
 
-
-
   async getCoupons(): Promise<CouponTemplate[]> {
     try {
-      const sql = 'SELECT * FROM coupon_templates ORDER BY "created_at" DESC NOLIMIT;';
+      const sql =
+        'SELECT * FROM coupon_templates ORDER BY "created_at" DESC LIMIT 1000;';
       const rows = await this.executeSql(sql);
-      
+
       return rows.map((row: any) => ({
         id: row.id,
         brandId: row.brand_id,
         couponPrefix: row.coupon_prefix,
-        discountPercentage: row.discount_percentage,
-        validityDays: row.validity_days,
-        rarityPercentage: row.rarity_percentage,
+        discountPercentage: Number(row.discount_percentage),
+        validityDays: Number(row.validity_days),
+        rarityPercentage: Number(row.rarity_percentage),
         redeemUrl: row.redeem_url,
         terms: row.terms,
-        createdAt: row.created_at
+        createdAt: new Date(row.created_at).getTime(),
       }));
     } catch (error) {
       console.error("[BolticService] Error getting coupons:", error);
@@ -634,7 +666,7 @@ export class BolticService implements IBolticService {
           ${coupon.rarityPercentage}, 
           '${this.escapeSql(coupon.redeemUrl)}', 
           '${this.escapeSql(coupon.terms)}', 
-          ${coupon.createdAt}
+          '${new Date(coupon.createdAt).toISOString()}'
         );
       `;
       await this.executeSql(sql);
@@ -645,22 +677,36 @@ export class BolticService implements IBolticService {
     }
   }
 
-  async updateCoupon(id: string, updates: Partial<CouponTemplate>): Promise<boolean> {
+  async updateCoupon(
+    id: string,
+    updates: Partial<CouponTemplate>
+  ): Promise<boolean> {
     try {
-       const setParts = [];
-       if (updates.brandId) setParts.push(`"brand_id" = '${this.escapeSql(updates.brandId)}'`);
-       if (updates.couponPrefix) setParts.push(`"coupon_prefix" = '${this.escapeSql(updates.couponPrefix)}'`);
-       if (updates.discountPercentage !== undefined) setParts.push(`"discount_percentage" = ${updates.discountPercentage}`);
-       if (updates.validityDays !== undefined) setParts.push(`"validity_days" = ${updates.validityDays}`);
-       if (updates.rarityPercentage !== undefined) setParts.push(`"rarity_percentage" = ${updates.rarityPercentage}`);
-       if (updates.redeemUrl) setParts.push(`"redeem_url" = '${this.escapeSql(updates.redeemUrl)}'`);
-       if (updates.terms) setParts.push(`"terms" = '${this.escapeSql(updates.terms)}'`);
+      const setParts = [];
+      if (updates.brandId)
+        setParts.push(`"brand_id" = '${this.escapeSql(updates.brandId)}'`);
+      if (updates.couponPrefix)
+        setParts.push(
+          `"coupon_prefix" = '${this.escapeSql(updates.couponPrefix)}'`
+        );
+      if (updates.discountPercentage !== undefined)
+        setParts.push(`"discount_percentage" = ${updates.discountPercentage}`);
+      if (updates.validityDays !== undefined)
+        setParts.push(`"validity_days" = ${updates.validityDays}`);
+      if (updates.rarityPercentage !== undefined)
+        setParts.push(`"rarity_percentage" = ${updates.rarityPercentage}`);
+      if (updates.redeemUrl)
+        setParts.push(`"redeem_url" = '${this.escapeSql(updates.redeemUrl)}'`);
+      if (updates.terms)
+        setParts.push(`"terms" = '${this.escapeSql(updates.terms)}'`);
 
-       if (setParts.length === 0) return true;
+      if (setParts.length === 0) return true;
 
-       const sql = `UPDATE coupon_templates SET ${setParts.join(", ")} WHERE "id" = '${this.escapeSql(id)}';`;
-       await this.executeSql(sql);
-       return true;
+      const sql = `UPDATE coupon_templates SET ${setParts.join(
+        ", "
+      )} WHERE "id" = '${this.escapeSql(id)}';`;
+      await this.executeSql(sql);
+      return true;
     } catch (error) {
       console.error("[BolticService] Error updating coupon:", error);
       return false;
@@ -669,7 +715,9 @@ export class BolticService implements IBolticService {
 
   async deleteCoupon(id: string): Promise<boolean> {
     try {
-      const sql = `DELETE FROM coupon_templates WHERE "id" = '${this.escapeSql(id)}';`;
+      const sql = `DELETE FROM coupon_templates WHERE "id" = '${this.escapeSql(
+        id
+      )}';`;
       await this.executeSql(sql);
       return true;
     } catch (error) {
@@ -682,7 +730,7 @@ export class BolticService implements IBolticService {
    * Generate unique ID
    */
   private generateId(): string {
-    return require('crypto').randomUUID();
+    return require("crypto").randomUUID();
   }
 }
 
